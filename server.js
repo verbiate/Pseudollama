@@ -718,10 +718,26 @@ const processChatRequest = async (req, res, isOpenAIFormat = false) => {
         
         // First check for specific model identifier in the request
         // This ensures we respect the actual model requested, not just the config
-        if (modelName === 'openrouter' || model === 'openrouter:latest' ||
+        if (modelName === 'lmstudio' || model === 'lmstudio:latest' || model === 'LM Studio') {
+            // Handle LMStudio requests
+            console.log('[MODEL SELECTION] Detected LMStudio model request');
+            
+            // Validate LMStudio URL
+            if (!config.lmstudio?.url) {
+                throw new Error('LMStudio URL is not configured. Please set it in the web UI.');
+            }
+            
+            // Skip to the LMStudio handler below
+            // The code will continue to the LMStudio section
+        }
+        else if (modelName === 'openrouter' || model === 'openrouter:latest' ||
             model.includes('openrouter') || model === 'OpenRouter API' ||
             model === 'Remote Pseudo Model' || modelName === 'Remote Pseudo Model' ||
-            config.selectedModelType === 'openrouter' || isPseudoServerRequest) {
+            (config.selectedModelType === 'openrouter' &&
+             modelName !== 'lmstudio' &&
+             model !== 'lmstudio:latest' &&
+             model !== 'LM Studio') ||
+            isPseudoServerRequest) {
             
             // If this is a request from the pseudo server, log it
             if (isPseudoServerRequest) {
