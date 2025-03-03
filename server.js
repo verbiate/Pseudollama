@@ -5,7 +5,12 @@ if (dotenvResult.error) {
   console.error('Error loading .env file:', dotenvResult.error);
 } else {
   console.log('Successfully loaded .env file');
-  console.log('Parsed .env file:', dotenvResult.parsed);
+  // Mask sensitive information in logs
+  const maskedEnv = { ...dotenvResult.parsed };
+  if (maskedEnv.OPENROUTER_API_KEY) {
+    maskedEnv.OPENROUTER_API_KEY = `${maskedEnv.OPENROUTER_API_KEY.slice(0, 5)}...${maskedEnv.OPENROUTER_API_KEY.slice(-4)}`;
+  }
+  console.log('Parsed .env file:', maskedEnv);
 }
 console.log('Environment variable OPENROUTER_API_KEY:', process.env.OPENROUTER_API_KEY ? `${process.env.OPENROUTER_API_KEY.slice(0, 5)}...${process.env.OPENROUTER_API_KEY.slice(-4)}` : 'not set');
 const express = require('express');
@@ -64,7 +69,7 @@ const loadConfig = () => {
         }
       }
       
-      // Use .env file as the source of truth for OpenRouter API key
+      // Always use .env file as the source of truth for OpenRouter API key
       if (process.env.OPENROUTER_API_KEY) {
         // If .env has a key, use it (overriding the config file)
         if (!config.openrouter) {
@@ -73,17 +78,10 @@ const loadConfig = () => {
           };
         }
         console.log(`Using OpenRouter API key from .env file: ${process.env.OPENROUTER_API_KEY.slice(0, 5)}...${process.env.OPENROUTER_API_KEY.slice(-4)}`);
-        config.openrouter.apiKey = process.env.OPENROUTER_API_KEY;
-      } else if (config.openrouter?.apiKey) {
-        // If no key in .env but one in config, use the config key
-        console.log(`Using OpenRouter API key from config file: ${config.openrouter.apiKey.slice(0, 5)}...${config.openrouter.apiKey.slice(-4)}`);
-        process.env.OPENROUTER_API_KEY = config.openrouter.apiKey;
-        
-        // Also update the .env file with this key to ensure consistency
-        console.log('Updating .env file with key from config file for consistency');
-        updateEnvFile(config.openrouter.apiKey);
+        // Don't store the API key in the config object, just reference it from process.env
+        config.openrouter.apiKey = null; // Set to null to indicate it's using the env variable
       } else {
-        console.log('No OpenRouter API key found in .env or config file');
+        console.log('No OpenRouter API key found in .env file');
       }
       
       return true;
@@ -261,11 +259,11 @@ app.get('/api/openrouter/models', async (req, res) => {
         });
     }
     
-    // Check if OpenRouter API key is configured
-    if (!config.openrouter?.apiKey) {
+    // Check if OpenRouter API key is configured in environment variable
+    if (!process.env.OPENROUTER_API_KEY) {
         return res.status(400).json({
             success: false,
-            message: 'OpenRouter API key is not configured'
+            message: 'OpenRouter API key is not configured in .env file'
         });
     }
     
@@ -407,14 +405,14 @@ app.get('/api/config', (req, res) => {
         });
     }
     
-    // Create a copy of the config with the actual API key
+    // Create a copy of the config with the actual API key from environment variable
     const safeConfig = {
         selectedModelType: config.selectedModelType,
         openrouter: {
             ...config.openrouter,
-            // Send the actual API key, not masked
-            apiKey: config.openrouter?.apiKey || '',
-            hasApiKey: !!config.openrouter?.apiKey
+            // Send the actual API key from environment variable, not from config
+            apiKey: process.env.OPENROUTER_API_KEY || '',
+            hasApiKey: !!process.env.OPENROUTER_API_KEY
         },
         lmstudio: { ...config.lmstudio }
     };
@@ -469,7 +467,7 @@ app.post('/api/config', (req, res) => {
             if (newApiKey.startsWith('••••')) {
                 console.log('Received API key with masked prefix, removing prefix');
                 // If it's just the masked version of the existing key, don't update
-                if (newApiKey === '••••' + (config.openrouter?.apiKey?.slice(-4) || '')) {
+                if (newApiKey === '••••' + (process.env.OPENROUTER_API_KEY?.slice(-4) || '')) {
                     console.log('API key unchanged (masked version of existing key)');
                 } else {
                     // Extract the actual new key (remove the masked prefix)
@@ -485,7 +483,7 @@ app.post('/api/config', (req, res) => {
                     }
                     
                     console.log(`Updating OpenRouter API key to: ${newApiKey.slice(0, 5)}...${newApiKey.slice(-4)}`);
-                    config.openrouter.apiKey = newApiKey;
+                    // Only update the .env file, not the config object
                     process.env.OPENROUTER_API_KEY = newApiKey;
                     
                     // Update the .env file with the new API key
@@ -497,7 +495,7 @@ app.post('/api/config', (req, res) => {
             } else {
                 // Normal case - API key doesn't have a masked prefix
                 console.log(`Updating OpenRouter API key to: ${newApiKey.slice(0, 5)}...${newApiKey.slice(-4)}`);
-                config.openrouter.apiKey = newApiKey;
+                // Only update the .env file, not the config object
                 process.env.OPENROUTER_API_KEY = newApiKey;
                 
                 // Update the .env file with the new API key
@@ -540,7 +538,7 @@ app.post('/api/config', (req, res) => {
         if (!config.openrouter) {
             config.openrouter = {};
         }
-        config.openrouter.apiKey = newApiKey;
+        // Only update the .env file, not the config object
         process.env.OPENROUTER_API_KEY = newApiKey;
         
         // Update the .env file with the new API key
@@ -570,9 +568,9 @@ app.post('/api/config', (req, res) => {
                 selectedModelType: config.selectedModelType,
                 openrouter: {
                     ...config.openrouter,
-                    apiKey: config.openrouter?.apiKey ?
-                        '••••' + config.openrouter.apiKey.slice(-4) : '',
-                    hasApiKey: !!config.openrouter?.apiKey
+                    apiKey: process.env.OPENROUTER_API_KEY ?
+                        '••••' + process.env.OPENROUTER_API_KEY.slice(-4) : '',
+                    hasApiKey: !!process.env.OPENROUTER_API_KEY
                 },
                 lmstudio: { ...config.lmstudio }
             };
@@ -729,9 +727,9 @@ const processChatRequest = async (req, res, isOpenAIFormat = false) => {
             if (isPseudoServerRequest) {
                 console.log('[MODEL SELECTION] Routing remote pseudo model request to OpenRouter');
             }
-            // Validate OpenRouter API key
-            if (!config.openrouter?.apiKey) {
-                throw new Error('OpenRouter API key is not configured. Please set it in the web UI.');
+            // Validate OpenRouter API key from environment variable
+            if (!process.env.OPENROUTER_API_KEY) {
+                throw new Error('OpenRouter API key is not configured. Please set it in the .env file or web UI.');
             }
             
             try {
@@ -775,7 +773,7 @@ const processChatRequest = async (req, res, isOpenAIFormat = false) => {
                         method: 'post',
                         url: 'https://openrouter.ai/api/v1/chat/completions',
                         data: openRouterRequest,
-                        headers: { 'Authorization': `Bearer ${config.openrouter.apiKey}` },
+                        headers: { 'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}` },
                         responseType: 'stream'
                     });
                     
@@ -853,7 +851,7 @@ const processChatRequest = async (req, res, isOpenAIFormat = false) => {
                     const response = await axios.post(
                         'https://openrouter.ai/api/v1/chat/completions',
                         openRouterRequest,
-                        { headers: { 'Authorization': `Bearer ${config.openrouter.apiKey}` } }
+                        { headers: { 'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}` } }
                     );
                     
                     console.log('Received response from OpenRouter');
@@ -1104,11 +1102,11 @@ const processChatRequest = async (req, res, isOpenAIFormat = false) => {
                     model: 'lmstudio:latest'
                 }
             }, res, isOpenAIFormat);
-        } else if (config.openrouter?.apiKey) {
+        } else if (process.env.OPENROUTER_API_KEY) {
             // Redirect to OpenRouter code path
             console.log(`Defaulting to OpenRouter as fallback`);
-            if (!config.openrouter?.apiKey) {
-                throw new Error('OpenRouter API key is not configured. Please set it in the web UI.');
+            if (!process.env.OPENROUTER_API_KEY) {
+                throw new Error('OpenRouter API key is not configured. Please set it in the .env file or web UI.');
             }
             
             // Re-run the OpenRouter flow
@@ -1567,8 +1565,8 @@ app.get('/api/tags', (req, res) => {
     // Create a list of models based on the configured model types
     const modelsList = [];
     
-    // Add OpenRouter model if configured
-    if (config.openrouter?.apiKey) {
+    // Add OpenRouter model if configured in environment variable
+    if (process.env.OPENROUTER_API_KEY) {
         modelsList.push({
             model: 'openrouter:latest',
             name: 'OpenRouter API',
@@ -1617,8 +1615,8 @@ app.get('/v1/models', (req, res) => {
     // Create a list of models in OpenAI format based on the configured model types
     const openaiModelsList = [];
     
-    // Add OpenRouter model if configured
-    if (config.openrouter?.apiKey) {
+    // Add OpenRouter model if configured in environment variable
+    if (process.env.OPENROUTER_API_KEY) {
         openaiModelsList.push({
             id: "openrouter-latest",
             object: "model",

@@ -1,8 +1,8 @@
 {
-  "selectedModelType": "lmstudio",
+  "selectedModelType": "openrouter",
   "openrouter": {
-    "apiKey": "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",
-    "model": "google/gemini-2.0-flash-lite-001"
+    "apiKey": null,
+    "model": "openai/o3-mini"
   },
   "lmstudio": {
     "url": "http://localhost:1234/v1",
