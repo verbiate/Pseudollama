@@ -186,9 +186,15 @@ const updateEnvFile = (apiKey) => {
 // Load config on startup
 loadConfig();
 
+// Import the logger
+const logger = require('./logger');
+
 // Middleware
 app.use(express.json({ limit: '50mb' })); // Increase JSON body size limit
 app.use(cors());
+
+// Add the full model communication logging middleware
+app.use(logger.createLoggingMiddleware());
 
 // Debug logging middleware - add this before other routes
 app.use((req, res, next) => {
@@ -291,6 +297,105 @@ const writeContentFile = (content) => {
 app.get('/api/server/status', (req, res) => {
     console.log('Received /api/server/status request');
     res.json({ enabled: serverEnabled });
+});
+
+// Endpoint to fetch model communication logs
+app.get('/api/logs', (req, res) => {
+    console.log('Received /api/logs request');
+    
+    if (!serverEnabled) {
+        return res.status(503).json({
+            success: false,
+            message: 'Server is currently disabled'
+        });
+    }
+    
+    try {
+        const logFilePath = path.join(__dirname, 'logs', 'model_communications.log');
+        
+        if (!fs.existsSync(logFilePath)) {
+            return res.json({
+                success: true,
+                logs: 'No logs available yet. Make some model requests first.'
+            });
+        }
+        
+        // Read the log file
+        const logContent = fs.readFileSync(logFilePath, 'utf8');
+        
+        // Get query parameters for filtering
+        const { limit = 10, type } = req.query;
+        
+        // Parse the log content into entries
+        const logEntries = [];
+        let currentEntry = '';
+        let inEntry = false;
+        let entryType = '';
+        
+        logContent.split('\n').forEach(line => {
+            if (line.startsWith('=== REQUEST [') ||
+                line.startsWith('=== RESPONSE [') ||
+                line.startsWith('=== STREAM START [')) {
+                
+                if (inEntry) {
+                    logEntries.push({ type: entryType, content: currentEntry });
+                }
+                
+                currentEntry = line;
+                inEntry = true;
+                
+                if (line.startsWith('=== REQUEST [')) {
+                    entryType = 'request';
+                } else if (line.startsWith('=== RESPONSE [')) {
+                    entryType = 'response';
+                } else if (line.startsWith('=== STREAM START [')) {
+                    entryType = 'stream';
+                }
+            } else if (line.startsWith('=== END REQUEST') ||
+                      line.startsWith('=== END RESPONSE') ||
+                      line.startsWith('=== STREAM END [')) {
+                
+                currentEntry += '\n' + line;
+                
+                if (inEntry) {
+                    logEntries.push({ type: entryType, content: currentEntry });
+                }
+                
+                currentEntry = '';
+                inEntry = false;
+            } else if (inEntry) {
+                currentEntry += '\n' + line;
+            }
+        });
+        
+        // Add the last entry if there is one
+        if (inEntry && currentEntry) {
+            logEntries.push({ type: entryType, content: currentEntry });
+        }
+        
+        // Apply type filter if specified
+        let filteredEntries = logEntries;
+        if (type) {
+            filteredEntries = logEntries.filter(entry => entry.type === type);
+        }
+        
+        // Apply limit
+        const limitNum = parseInt(limit, 10);
+        if (!isNaN(limitNum) && limitNum > 0) {
+            filteredEntries = filteredEntries.slice(-limitNum);
+        }
+        
+        res.json({
+            success: true,
+            logs: filteredEntries
+        });
+    } catch (error) {
+        console.error('Error reading logs:', error);
+        res.status(500).json({
+            success: false,
+            message: `Error reading logs: ${error.message}`
+        });
+    }
 });
 
 // Endpoint to fetch available models from OpenRouter
@@ -453,7 +558,7 @@ app.get('/api/lmstudio/models', async (req, res) => {
         const models = response.data.data.map(model => ({
             id: model.id,
             name: model.id, // LMStudio typically doesn't provide a separate name
-            description: '',
+            description: model.owned_by ? `Provider: ${model.owned_by}` : '',
             created: model.created
         }));
         
@@ -840,12 +945,12 @@ const processChatRequest = async (req, res, isOpenAIFormat = false) => {
             // The code will continue to the LMStudio section
         }
         else if (modelName === 'openrouter' || model === 'openrouter:latest' ||
-            model.includes('openrouter') || model === 'OpenRouter API' ||
-            model === 'Remote Pseudo Model' || modelName === 'Remote Pseudo Model' ||
+            model.includes('openrouter') || model === 'RemoteModel' ||
+            modelName === 'RemoteModel' ||
             (config.selectedModelType === 'openrouter' &&
              modelName !== 'lmstudio' &&
              model !== 'lmstudio:latest' &&
-             model !== 'LM Studio') ||
+             model !== 'LocalModel') ||
             isPseudoServerRequest) {
             
             // If this is a request from the pseudo server, log it
@@ -868,14 +973,11 @@ const processChatRequest = async (req, res, isOpenAIFormat = false) => {
                 // But only if it's a valid OpenRouter model ID
                 if (modelName !== 'openrouter' &&
                     modelName !== 'remote' &&
-                    modelName !== 'OpenRouter API' &&
-                    model !== 'OpenRouter API' &&
-                    modelName !== 'Remote Pseudo Model' &&
-                    model !== 'Remote Pseudo Model') {
+                    modelName !== 'RemoteModel' &&
+                    model !== 'RemoteModel') {
                     openRouterModel = modelName;
-                } else if (modelName === 'OpenRouter API' || model === 'OpenRouter API' ||
-                          modelName === 'Remote Pseudo Model' || model === 'Remote Pseudo Model') {
-                    // Use the default model from config for special pseudo models
+                } else if (modelName === 'RemoteModel' || model === 'RemoteModel') {
+                    // Use the default model from config for RemoteModel
                     openRouterModel = config.openrouter?.model || 'google/gemini-2.0-flash-001';
                     console.log(`Using default OpenRouter model ${openRouterModel} for model name: ${model}`);
                 }
@@ -1022,12 +1124,11 @@ const processChatRequest = async (req, res, isOpenAIFormat = false) => {
         } catch (error) {
             console.error(`[LMSTUDIO CHECK] Error checking isPseudoServerRemoteRequest: ${error.message}`);
         }
-        if ((model === 'lmstudio:latest' || modelName === 'lmstudio' || model === 'LM Studio') ||
+        if ((model === 'lmstudio:latest' || modelName === 'lmstudio' || model === 'LocalModel') ||
             (config.selectedModelType === 'lmstudio' &&
              modelName !== 'openrouter' &&
              model !== 'openrouter:latest' &&
-             model !== 'OpenRouter API' &&
-             model !== 'Remote Pseudo Model' &&
+             model !== 'RemoteModel' &&
              !model.includes('openrouter') &&
              !isPseudoServerRemoteRequest)) {
             console.log('[LMSTUDIO CHECK] LMStudio condition triggered - attempting to connect to LMStudio');
@@ -1087,9 +1188,15 @@ const processChatRequest = async (req, res, isOpenAIFormat = false) => {
                         for (const line of lines) {
                             if (line.startsWith('data: ')) {
                                 const data = line.slice(6);
-                                if (data === '[DONE]') continue;
+                                if (data === '[DONE]') {
+                                    console.log('[LMSTUDIO STREAM] Received [DONE] without content');
+                                    continue;
+                                }
                                 try {
                                     const parsed = JSON.parse(data);
+                                    console.log('[LMSTUDIO STREAM] Parsed data:', JSON.stringify(parsed));
+                                    
+                                    // Check if we have valid content
                                     if (parsed.choices && parsed.choices[0].delta && parsed.choices[0].delta.content) {
                                         fullContent += parsed.choices[0].delta.content;
                                         
@@ -1110,6 +1217,14 @@ const processChatRequest = async (req, res, isOpenAIFormat = false) => {
                                             };
                                             res.write(JSON.stringify(ollamaChunk) + '\n');
                                         }
+                                    } else {
+                                        // Handle empty delta or missing content
+                                        console.log('[LMSTUDIO STREAM] Empty delta or missing content in response');
+                                        
+                                        // If we have a delta but no content, it might be a role or other metadata
+                                        if (parsed.choices && parsed.choices[0].delta) {
+                                            console.log('[LMSTUDIO STREAM] Delta without content:', JSON.stringify(parsed.choices[0].delta));
+                                        }
                                     }
                                 } catch (e) {
                                     console.error('Error parsing stream chunk:', e.message);
@@ -1119,6 +1234,47 @@ const processChatRequest = async (req, res, isOpenAIFormat = false) => {
                     });
                     
                     streamResponse.data.on('end', () => {
+                        console.log(`[LMSTUDIO STREAM] Stream ended, fullContent length: ${fullContent.length}`);
+                        
+                        // Check if we received any content at all
+                        if (fullContent.length === 0) {
+                            console.log('[LMSTUDIO STREAM] No content received from LMStudio, falling back to default response');
+                            
+                            // Generate a fallback response
+                            const fallbackContent = "I'm sorry, but I couldn't generate a response. Please try again or check if LM Studio is running correctly.";
+                            fullContent = fallbackContent;
+                            
+                            // Send the fallback content as a final chunk
+                            if (isOpenAIFormat) {
+                                const fallbackChunk = {
+                                    id: `chatcmpl-${Date.now()}`,
+                                    object: "chat.completion.chunk",
+                                    created: Math.floor(Date.now() / 1000),
+                                    model: model,
+                                    choices: [
+                                        {
+                                            index: 0,
+                                            delta: { content: fallbackContent },
+                                            finish_reason: null
+                                        }
+                                    ]
+                                };
+                                res.write(`data: ${JSON.stringify(fallbackChunk)}\n\n`);
+                            } else {
+                                const ollamaChunk = {
+                                    model: model,
+                                    created_at: new Date().toISOString(),
+                                    message: {
+                                        role: 'assistant',
+                                        content: fallbackContent
+                                    },
+                                    done: false
+                                };
+                                res.write(JSON.stringify(ollamaChunk) + '\n');
+                            }
+                        }
+                        
+                        // Send the final [DONE] marker
                         if (isOpenAIFormat) {
                             res.write('data: [DONE]\n\n');
                         } else {
@@ -1200,7 +1356,27 @@ const processChatRequest = async (req, res, isOpenAIFormat = false) => {
                 }
                 
                 console.error(`[LMSTUDIO ERROR] Final error message: LMStudio error: ${errorMessage}`);
-                throw new Error(`LMStudio error: ${errorMessage}`);
+                
+                // Check if we should fall back to OpenRouter
+                if (process.env.OPENROUTER_API_KEY) {
+                    console.log('[LMSTUDIO ERROR] Falling back to OpenRouter due to LMStudio error');
+                    
+                    // Update the config to use OpenRouter for future requests
+                    config.selectedModelType = 'openrouter';
+                    saveConfig();
+                    
+                    // Re-run the request using OpenRouter
+                    return processChatRequest({
+                        ...req,
+                        body: {
+                            ...req.body,
+                            model: 'openrouter:latest'
+                        }
+                    }, res, isOpenAIFormat);
+                } else {
+                    // If OpenRouter is not configured, throw the error
+                    throw new Error(`LMStudio error: ${errorMessage}`);
+                }
             }
         }
         
@@ -1663,7 +1839,7 @@ app.post('/v1/embeddings', (req, res) => {
 });
 
 // Endpoint to list available models (similar to Ollama's /api/tags)
-app.get('/api/tags', (req, res) => {
+app.get('/api/tags', async (req, res) => {
     console.log('Received Ollama-style /api/tags request');
     
     // Check if server is enabled
@@ -1674,31 +1850,87 @@ app.get('/api/tags', (req, res) => {
         });
     }
     
-    // Create a list of models based on the configured model types
-    const modelsList = [];
+    // Create a list of models - only include our two pseudo models
+    let modelsList = [];
     
-    // Add OpenRouter model if configured in environment variable
+    // Add LocalModel for LM Studio if configured
+    if (config.lmstudio?.url) {
+        try {
+            // Check if we have a valid cache to verify LM Studio is accessible
+            const now = Date.now();
+            const cache = modelCache.lmstudio;
+            
+            let lmStudioConnected = false;
+            
+            if (cache.models && cache.lastFetched && (now - cache.lastFetched < cache.cacheDuration)) {
+                console.log(`[LMSTUDIO MODELS] LM Studio connection verified via cache`);
+                lmStudioConnected = true;
+            } else {
+                // Prepare headers for the request
+                const headers = {};
+                if (config.lmstudio.apiKey) {
+                    headers['Authorization'] = `Bearer ${config.lmstudio.apiKey}`;
+                }
+                
+                // Format the URL correctly
+                const lmStudioUrl = config.lmstudio.url.endsWith('/')
+                    ? config.lmstudio.url.slice(0, -1)
+                    : config.lmstudio.url;
+                    
+                try {
+                    // Just check if LM Studio is accessible
+                    console.log(`[LMSTUDIO MODELS] Verifying LM Studio connection`);
+                    const response = await axios.get(`${lmStudioUrl}/models`, {
+                        headers,
+                        timeout: config.lmstudio.timeout || 30000
+                    });
+                    
+                    // Update the cache
+                    modelCache.lmstudio.models = response.data.data;
+                    modelCache.lmstudio.lastFetched = now;
+                    lmStudioConnected = true;
+                } catch (error) {
+                    console.error('Error connecting to LM Studio:', error.message);
+                    lmStudioConnected = false;
+                }
+            }
+            
+            // Add the LocalModel entry if LM Studio is connected
+            if (lmStudioConnected) {
+                modelsList.push({
+                    model: 'lmstudio:latest',
+                    name: 'LocalModel',
+                    modified_at: new Date().toISOString(),
+                    size: 0,
+                    digest: 'n/a'
+                });
+                
+                console.log(`[LMSTUDIO MODELS] Added LocalModel pseudo model for LM Studio`);
+            }
+        } catch (error) {
+            console.error('Error verifying LM Studio connection:', error.message);
+            // Still add the LocalModel entry even if there's an error
+            modelsList.push({
+                model: 'lmstudio:latest',
+                name: 'LocalModel',
+                modified_at: new Date().toISOString(),
+                size: 0,
+                digest: 'n/a'
+            });
+        }
+    }
+    
+    // Add RemoteModel for OpenRouter if configured
     if (process.env.OPENROUTER_API_KEY) {
         modelsList.push({
             model: 'openrouter:latest',
-            name: 'OpenRouter API',
+            name: 'RemoteModel',
             modified_at: new Date().toISOString(),
             size: 0,
             digest: 'n/a'
         });
         
-        // Remote Pseudo Model removed as requested
-    }
-    
-    // Add LMStudio model if configured
-    if (config.lmstudio?.url) {
-        modelsList.push({
-            model: 'lmstudio:latest',
-            name: 'LM Studio',
-            modified_at: new Date().toISOString(),
-            size: 0,
-            digest: 'n/a'
-        });
+        console.log(`[OPENROUTER MODELS] Added RemoteModel pseudo model for OpenRouter`);
     }
     
     const models = {
@@ -1710,7 +1942,7 @@ app.get('/api/tags', (req, res) => {
 });
 
 // OpenAI-compatible endpoint for listing models
-app.get('/v1/models', (req, res) => {
+app.get('/v1/models', async (req, res) => {
     console.log('Received OpenAI-style /v1/models request');
     
     // Check if server is enabled
@@ -1724,47 +1956,87 @@ app.get('/v1/models', (req, res) => {
         });
     }
     
-    // Create a list of models in OpenAI format based on the configured model types
-    const openaiModelsList = [];
+    // Create a list of models - only include our two pseudo models
+    let openaiModelsList = [];
     
-    // Add OpenRouter model if configured in environment variable
-    if (process.env.OPENROUTER_API_KEY) {
-        openaiModelsList.push({
-            id: "openrouter-latest",
-            object: "model",
-            created: Math.floor(Date.now() / 1000),
-            owned_by: "pseudollama"
-        });
-        
-        // If we have a specific OpenRouter model configured, add it too
-        if (config.openrouter?.model) {
+    // Add LocalModel for LM Studio if configured
+    if (config.lmstudio?.url) {
+        try {
+            // Check if we have a valid cache to verify LM Studio is accessible
+            const now = Date.now();
+            const cache = modelCache.lmstudio;
+            
+            let lmStudioConnected = false;
+            
+            if (cache.models && cache.lastFetched && (now - cache.lastFetched < cache.cacheDuration)) {
+                console.log(`[LMSTUDIO MODELS] LM Studio connection verified via cache`);
+                lmStudioConnected = true;
+            } else {
+                // Prepare headers for the request
+                const headers = {};
+                if (config.lmstudio.apiKey) {
+                    headers['Authorization'] = `Bearer ${config.lmstudio.apiKey}`;
+                }
+                
+                // Format the URL correctly
+                const lmStudioUrl = config.lmstudio.url.endsWith('/')
+                    ? config.lmstudio.url.slice(0, -1)
+                    : config.lmstudio.url;
+                    
+                try {
+                    // Just check if LM Studio is accessible
+                    console.log(`[LMSTUDIO MODELS] Verifying LM Studio connection`);
+                    const response = await axios.get(`${lmStudioUrl}/models`, {
+                        headers,
+                        timeout: config.lmstudio.timeout || 30000
+                    });
+                    
+                    // Update the cache
+                    modelCache.lmstudio.models = response.data.data;
+                    modelCache.lmstudio.lastFetched = now;
+                    lmStudioConnected = true;
+                } catch (error) {
+                    console.error('Error connecting to LM Studio:', error.message);
+                    lmStudioConnected = false;
+                }
+            }
+            
+            // Add the LocalModel entry if LM Studio is connected
+            if (lmStudioConnected) {
+                openaiModelsList.push({
+                    id: "lmstudio-latest",
+                    object: "model",
+                    name: "LocalModel",
+                    created: Math.floor(Date.now() / 1000),
+                    owned_by: "pseudollama"
+                });
+                
+                console.log(`[LMSTUDIO MODELS] Added LocalModel pseudo model for LM Studio`);
+            }
+        } catch (error) {
+            console.error('Error verifying LM Studio connection:', error.message);
+            // Still add the LocalModel entry even if there's an error
             openaiModelsList.push({
-                id: config.openrouter.model,
+                id: "lmstudio-latest",
                 object: "model",
+                name: "LocalModel",
                 created: Math.floor(Date.now() / 1000),
-                owned_by: "openrouter"
+                owned_by: "pseudollama"
             });
         }
     }
     
-    // Add LMStudio model if configured
-    if (config.lmstudio?.url) {
+    // Add RemoteModel for OpenRouter if configured
+    if (process.env.OPENROUTER_API_KEY) {
         openaiModelsList.push({
-            id: "lmstudio-latest",
+            id: "openrouter-latest",
             object: "model",
+            name: "RemoteModel",
             created: Math.floor(Date.now() / 1000),
             owned_by: "pseudollama"
         });
         
-        // If we have a specific LMStudio model configured, add it too
-        if (config.lmstudio?.model) {
-            openaiModelsList.push({
-                id: config.lmstudio.model,
-                object: "model",
-                created: Math.floor(Date.now() / 1000),
-                owned_by: "lmstudio"
-            });
-        }
+        console.log(`[OPENROUTER MODELS] Added RemoteModel pseudo model for OpenRouter`);
     }
     
     const openaiModels = {
@@ -1831,4 +2103,5 @@ app.use((req, res) => {
 app.listen(PORT, () => {
     console.log(`PseudoLlama server running on http://localhost:${PORT}`);
     console.log(`Debug logging enabled - all requests and responses will be logged`);
+    console.log(`Full model communications (including complete request/response bodies) are logged to: ${path.join(__dirname, 'logs', 'model_communications.log')}`);
 });
