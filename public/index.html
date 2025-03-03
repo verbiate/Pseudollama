@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RooMin WebUI</title>
+    <title>Pseudollama</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
@@ -71,6 +71,10 @@
         }
         .active {
             color: #4CAF50;
+            font-weight: bold;
+        }
+        .inactive {
+            color: #F44336;
             font-weight: bold;
         }
         .form-group {
@@ -244,7 +248,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RooMin WebUI</h1>
+        <h1>Pseudollama</h1>
         
         <div class="server-status">
             <span class="status-dot"></span>
@@ -329,7 +333,6 @@
                             <input type="hidden" id="lmstudio-model-select" value="">
                         </div>
                         <button class="button" id="lmstudio-refresh-button">Refresh list</button>
-                        <button class="button" id="lmstudio-advanced-button">Advanced options</button>
                     </div>
                 </div>
             </div>
@@ -387,7 +390,6 @@
             const lmstudioModelList = document.getElementById('lmstudio-model-list');
             const lmstudioModelSelect = document.getElementById('lmstudio-model-select');
             const lmstudioRefreshButton = document.getElementById('lmstudio-refresh-button');
-            const lmstudioAdvancedButton = document.getElementById('lmstudio-advanced-button');
             
             // Test elements
             const testSelectedModel = document.getElementById('test-selected-model');
@@ -473,10 +475,10 @@
                     openrouterStatus.textContent = 'Active';
                     openrouterStatus.className = 'active';
                     lmstudioStatus.textContent = 'Inactive';
-                    lmstudioStatus.className = '';
+                    lmstudioStatus.className = 'inactive';
                 } else {
                     openrouterStatus.textContent = 'Inactive';
-                    openrouterStatus.className = '';
+                    openrouterStatus.className = 'inactive';
                     lmstudioStatus.textContent = 'Active';
                     lmstudioStatus.className = 'active';
                 }
@@ -1013,10 +1015,7 @@
                 }
             });
             
-            // Advanced options button (placeholder)
-            lmstudioAdvancedButton.addEventListener('click', () => {
-                alert('Advanced options would be shown here');
-            });
+            // Advanced options button removed
             
             // Load configuration on page load
             loadConfig();
