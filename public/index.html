@@ -41,6 +41,120 @@
             margin-bottom: 30px;
             gap: 10px;
         }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: #f5f7fa;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            width: 80%;
+            max-width: 1200px;
+            max-height: 80vh;
+            overflow: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .modal-title {
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #333;
+        }
+        
+        .logs-container {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            max-height: 60vh;
+        }
+        
+        .logs-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .logs-filter {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .log-entry {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #ccc;
+        }
+        
+        .log-entry.request {
+            border-left-color: #4CAF50;
+            background-color: #f0fff0;
+        }
+        
+        .log-entry.response {
+            border-left-color: #2196F3;
+            background-color: #f0f8ff;
+        }
+        
+        .log-entry.stream {
+            border-left-color: #FF9800;
+            background-color: #fff8f0;
+        }
+        
+        .log-timestamp {
+            font-weight: bold;
+            color: #666;
+        }
+        
+        .view-logs-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        .view-logs-button:hover {
+            background-color: #45a049;
+        }
         .status-dot {
             display: inline-block;
             width: 16px;
@@ -58,7 +172,7 @@
             margin-bottom: 30px;
         }
         .section-divider {
-            margin: 25px 0;
+            margin: 50px 0;
             border: 0;
             height: 1px;
             background-color: #ddd;
@@ -247,6 +361,37 @@
             <span class="status-dot"></span>
             <span>Server is running on port 12345</span>
             <a href="http://localhost:12345" class="server-url" target="_blank">http://localhost:12345</a>
+            <button class="view-logs-button" id="view-logs-button">View Logs</button>
+        </div>
+        
+        <!-- Logs Modal -->
+        <div id="logs-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">Model Communication Logs</h3>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="logs-controls">
+                    <div class="logs-filter">
+                        <select id="logs-type-filter" class="form-control">
+                            <option value="">All logs</option>
+                            <option value="request">Requests only</option>
+                            <option value="response">Responses only</option>
+                            <option value="stream">Streams only</option>
+                        </select>
+                        <select id="logs-limit" class="form-control">
+                            <option value="10">Last 10 entries</option>
+                            <option value="20">Last 20 entries</option>
+                            <option value="50">Last 50 entries</option>
+                            <option value="100">Last 100 entries</option>
+                        </select>
+                    </div>
+                    <button class="button" id="refresh-logs-button">Refresh Logs</button>
+                </div>
+                <div class="logs-container" id="logs-container">
+                    <div class="loading">Loading logs...</div>
+                </div>
+            </div>
         </div>
         
         <div class="model-config">
@@ -640,6 +785,16 @@
                     // Add tooltip with description if available
                     if (model.description) {
                         option.title = model.description;
+                        
+                        // If it's a provider description, add it inline
+                        if (model.description.startsWith('Provider:')) {
+                            const providerSpan = document.createElement('span');
+                            providerSpan.style.fontSize = '0.8em';
+                            providerSpan.style.color = '#666';
+                            providerSpan.style.marginLeft = '5px';
+                            providerSpan.textContent = ` (${model.description.replace('Provider: ', '')})`;
+                            option.appendChild(providerSpan);
+                        }
                     }
                     
                     openrouterModelList.appendChild(option);
@@ -689,6 +844,16 @@
                     option.className = 'dropdown-option';
                     option.dataset.value = model.id;
                     option.textContent = model.name || model.id;
+                    
+                    // Add provider information if available
+                    if (model.description && model.description.startsWith('Provider:')) {
+                        const providerSpan = document.createElement('span');
+                        providerSpan.style.fontSize = '0.8em';
+                        providerSpan.style.color = '#666';
+                        providerSpan.style.marginLeft = '5px';
+                        providerSpan.textContent = ` (${model.description.replace('Provider: ', '')})`;
+                        option.appendChild(providerSpan);
+                    }
                     lmstudioModelList.appendChild(option);
                     
                     // If this is the currently selected model, update the display
@@ -989,6 +1154,98 @@
             });
             
             // Advanced options button removed
+            
+            // Logs modal elements
+            const viewLogsButton = document.getElementById('view-logs-button');
+            const logsModal = document.getElementById('logs-modal');
+            const logsContainer = document.getElementById('logs-container');
+            const logsTypeFilter = document.getElementById('logs-type-filter');
+            const logsLimit = document.getElementById('logs-limit');
+            const refreshLogsButton = document.getElementById('refresh-logs-button');
+            const closeButton = logsModal.querySelector('.close');
+            
+            // Function to fetch and display logs
+            const fetchLogs = async () => {
+                try {
+                    logsContainer.innerHTML = '<div class="loading">Loading logs...</div>';
+                    
+                    // Get filter values
+                    const type = logsTypeFilter.value;
+                    const limit = logsLimit.value;
+                    
+                    // Build query string
+                    let queryString = '?';
+                    if (type) queryString += `type=${type}&`;
+                    if (limit) queryString += `limit=${limit}`;
+                    
+                    // Fetch logs from server
+                    const response = await fetch(`/api/logs${queryString}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        if (typeof data.logs === 'string') {
+                            // Display message if no logs available
+                            logsContainer.innerHTML = `<div class="log-entry">${data.logs}</div>`;
+                        } else if (Array.isArray(data.logs) && data.logs.length > 0) {
+                            // Clear container
+                            logsContainer.innerHTML = '';
+                            
+                            // Display logs
+                            data.logs.forEach(log => {
+                                const logEntry = document.createElement('div');
+                                logEntry.className = `log-entry ${log.type}`;
+                                
+                                // Extract timestamp from content if available
+                                let timestamp = '';
+                                const timestampMatch = log.content.match(/\[(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z)\]/);
+                                if (timestampMatch) {
+                                    timestamp = timestampMatch[1];
+                                }
+                                
+                                // Create log entry content
+                                logEntry.innerHTML = `
+                                    <div class="log-timestamp">${timestamp ? new Date(timestamp).toLocaleString() : ''}</div>
+                                    <pre>${log.content}</pre>
+                                `;
+                                
+                                logsContainer.appendChild(logEntry);
+                            });
+                        } else {
+                            logsContainer.innerHTML = '<div class="log-entry">No logs found matching the current filters.</div>';
+                        }
+                    } else {
+                        logsContainer.innerHTML = `<div class="log-entry">Error: ${data.message || 'Failed to fetch logs'}</div>`;
+                    }
+                } catch (error) {
+                    console.error('Error fetching logs:', error);
+                    logsContainer.innerHTML = `<div class="log-entry">Error fetching logs: ${error.message}</div>`;
+                }
+            };
+            
+            // Open logs modal
+            viewLogsButton.addEventListener('click', () => {
+                logsModal.style.display = 'block';
+                fetchLogs(); // Fetch logs when modal is opened
+            });
+            
+            // Close logs modal
+            closeButton.addEventListener('click', () => {
+                logsModal.style.display = 'none';
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', (event) => {
+                if (event.target === logsModal) {
+                    logsModal.style.display = 'none';
+                }
+            });
+            
+            // Refresh logs button
+            refreshLogsButton.addEventListener('click', fetchLogs);
+            
+            // Filter logs when type or limit changes
+            logsTypeFilter.addEventListener('change', fetchLogs);
+            logsLimit.addEventListener('change', fetchLogs);
             
             // Load configuration on page load
             loadConfig();

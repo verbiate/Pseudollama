@@ -13,6 +13,7 @@ PseudoLlama is a simple Express server that mimics the Ollama API. It serves con
 - Serves content from a configurable text file
 - Web UI for editing the content and testing the server
 - Supports both streaming and non-streaming responses
+- Comprehensive logging of all model communications (requests and responses)
 
 ## Installation
 
@@ -67,3 +68,51 @@ Access the web UI by navigating to `http://localhost:12345` in your browser. The
 ## Configuration
 
 The content served by the API is stored in `data/content.txt`. You can edit this file directly or use the web UI.
+
+## Logging
+
+PseudoLlama includes comprehensive logging of all model communications:
+
+### Console Logging
+
+Basic request and response information is logged to the console when the server is running.
+
+### Full Communication Logging
+
+Complete model communications (including full request and response bodies) are logged to `logs/model_communications.log`. This is particularly useful for:
+
+- Debugging applications that integrate with language models
+- Analyzing the exact data sent to and received from models
+- Understanding the structure of streaming responses
+
+### Log Viewer Utility
+
+A log viewer utility is included to help analyze the logs:
+
+```bash
+# View all logs
+node view-logs.js
+
+# Show only the last 10 log entries
+node view-logs.js --limit=10
+
+# Filter logs by model
+node view-logs.js --model=openrouter
+
+# Filter logs by endpoint
+node view-logs.js --endpoint=/v1/chat
+
+# Show only requests
+node view-logs.js --requests
+
+# Show only responses
+node view-logs.js --responses
+
+# Watch for new log entries in real-time
+node view-logs.js --tail
+
+# Show help
+node view-logs.js --help
+```
+
+The log files are automatically rotated when they reach 10MB to prevent excessive disk usage.

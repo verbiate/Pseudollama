@@ -2,7 +2,7 @@
 
 ## Project Purpose
 
-PseudoLlama is a server designed to simulate various LLM API responses without requiring the computational resources to run actual large language models. It acts as a middleware/proxy that can be used for testing, development, and demonstration purposes.
+PseudoLlama is a server designed to simulate various LLM API responses, either from a server or from LM Studio. It acts as a middleware/proxy that can be used for testing, development, and demonstration purposes.
 
 The server implements API endpoints that mimic both Ollama and OpenAI-compatible interfaces, making it versatile for a wide range of application testing scenarios.
 
@@ -10,33 +10,23 @@ The server implements API endpoints that mimic both Ollama and OpenAI-compatible
 
 - Simulates Ollama API endpoints (`/api/chat`, `/api/generate`, etc.)
 - Supports OpenAI-compatible endpoints (`/v1/chat/completions`, `/v1/completions`, etc.)
-- Serves content from a configurable text file
-- Includes a web UI for editing content and testing the server
-- Supports both streaming and non-streaming responses
-- Runs on a fixed port (12345) for consistent integration testing
+- Includes a basic web UI for editing content and testing the server
 
 ## Enhancement Goals
 
-The project is being enhanced to support three types of pseudo-models selectable via the web UI:
+The project supports different types of pseudo-models selectable via the model chooser when you connect to its Ollama endpoint:
 
 1. **Remote Model Integration**
-   - Connect to actual LLMs via OpenRouter
-   - Allow users to specify their OpenRouter API key
-   - Provide a dropdown for selecting from available OpenRouter models
+   - Connect to LLMs via OpenRouter (byo OpenRouter API key)
+   - A dropdown for selecting from available OpenRouter models
    - Pass through real responses from these models via our spoofed Ollama server
 
 2. **Local Model Integration**
-   - Connect to locally running LLMs via LMStudio
-   - Allow users to specify LMStudio URL and port
+   - Connect to LLMs running locally via LMStudio (specify local LMStudio URL and port)
    - Fetch and display available models from the connected LMStudio instance
    - Pipe responses from the local LLM through our server
 
-3. **Text Simulation**
-   - Allow users to specify a fixed text response
-   - Provide option to simulate streaming of this predefined output
-   - Useful for predictable testing scenarios that don't require actual LLM responses
-
-These enhancements will make PseudoLlama a more versatile testing tool that can switch between mock responses, local LLMs, and remote LLMs, all while maintaining the same API interface for client applications.
+These enhancements will make PseudoLlama a more versatile testing tool that can switch between local LLMs and remote LLMs all while maintaining the same API interface for client applications. This effectively brings models to Ollama that were previously unavailable.
 
 ## Technical Architecture
 
