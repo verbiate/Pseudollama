@@ -1,16 +1,15 @@
 # PseudoLlama Server
 
-A server that simulates Ollama API responses with custom content. Allows you to pipe through responses from LM Studio or OpenRouter to any Ollama-compatible endpoint.
+A tool that forwards responses through an Ollama-like server. Allows you to pipe through responses from LM Studio or OpenRouter to any Ollama-compatible endpoint.
 
 ## Overview
 
-PseudoLlama is a simple Express server that mimics the Ollama API. It serves content from a text file as responses to API requests, making it useful for testing applications that integrate with Ollama without needing to run a full LLM.
+PseudoLlama is a simple Express server that mimics the Ollama API. It serves content from a text file as responses to API requests, making it useful for testing applications that integrate with Ollama.
 
 ## Features
 
 - Simulates Ollama API endpoints (`/api/chat`, `/api/generate`, etc.)
 - Also supports OpenAI-compatible endpoints (`/v1/chat/completions`, `/v1/completions`, etc.)
-- Serves content from a configurable text file
 - Web UI for editing the content and testing the server
 - Supports both streaming and non-streaming responses
 - Comprehensive logging of all model communications (requests and responses)
@@ -64,10 +63,6 @@ Access the web UI by navigating to `http://localhost:12345` in your browser. The
 - View and edit the content that will be returned by the API
 - Test the API by sending a request to the server
 - Enable/disable the server
-
-## Configuration
-
-The content served by the API is stored in `data/content.txt`. You can edit this file directly or use the web UI.
 
 ## Logging
 
