@@ -1,15 +1,39 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 const app = express();
 const PORT = 11434; // Same port as Ollama
 
 // Server state
 let serverEnabled = true;
+const contentFilePath = path.join(__dirname, 'data', 'content.txt');
 
 // Middleware
 app.use(express.json());
 app.use(cors());
 app.use(express.static('public')); // For serving the web UI
+
+// Helper function to read content from file
+const readContentFile = () => {
+    try {
+        return fs.readFileSync(contentFilePath, 'utf8');
+    } catch (error) {
+        console.error('Error reading content file:', error);
+        return 'Error reading content file';
+    }
+};
+
+// Helper function to write content to file
+const writeContentFile = (content) => {
+    try {
+        fs.writeFileSync(contentFilePath, content, 'utf8');
+        return true;
+    } catch (error) {
+        console.error('Error writing to content file:', error);
+        return false;
+    }
+};
 
 // Endpoint to check server status
 app.get('/api/server/status', (req, res) => {
@@ -31,6 +55,48 @@ app.post('/api/server/toggle', (req, res) => {
     }
 });
 
+// Endpoint to get the current content
+app.get('/api/content', (req, res) => {
+    console.log('Received /api/content request');
+    
+    if (!serverEnabled) {
+        return res.status(503).json({ 
+            success: false, 
+            message: 'Server is currently disabled' 
+        });
+    }
+    
+    const content = readContentFile();
+    res.json({ success: true, content });
+});
+
+// Endpoint to update the content
+app.post('/api/content', (req, res) => {
+    console.log('Received /api/content update request:', JSON.stringify(req.body, null, 2));
+    
+    if (!serverEnabled) {
+        return res.status(503).json({ 
+            success: false, 
+            message: 'Server is currently disabled' 
+        });
+    }
+    
+    if (!req.body || typeof req.body.content !== 'string') {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Invalid request. Expected { content: string }' 
+        });
+    }
+    
+    const success = writeContentFile(req.body.content);
+    
+    if (success) {
+        res.json({ success: true, message: 'Content updated successfully' });
+    } else {
+        res.status(500).json({ success: false, message: 'Failed to update content' });
+    }
+});
+
 // Endpoint to handle chat completions (similar to Ollama's /api/chat)
 app.post('/api/chat', (req, res) => {
     console.log('Received /api/chat request:', JSON.stringify(req.body, null, 2));
@@ -49,8 +115,8 @@ app.post('/api/chat', (req, res) => {
             throw new Error('Missing or invalid required field: messages');
         }
 
-        // Generate a random number between 1 and 500
-        const randomNumber = Math.floor(Math.random() * 500) + 1;
+        // Read content from file instead of generating random number
+        const fileContent = readContentFile();
         
         // Format response like Ollama
         const ollamaResponse = {
@@ -58,7 +124,7 @@ app.post('/api/chat', (req, res) => {
             created_at: new Date().toISOString(),
             message: {
                 role: 'assistant',
-                content: `Random number: ${randomNumber}`
+                content: fileContent
             },
             done: true
         };
@@ -104,8 +170,8 @@ app.get('/api/tags', (req, res) => {
                 digest: 'n/a'
             },
             {
-                model: 'random-generator:latest',
-                name: 'Random Number Generator',
+                model: 'file-content:latest',
+                name: 'File Content Provider',
                 modified_at: new Date().toISOString(),
                 size: 0,
                 digest: 'n/a'
