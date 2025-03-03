@@ -3,16 +3,44 @@ const cors = require('cors');
 const app = express();
 const PORT = 11434; // Same port as Ollama
 
+// Server state
+let serverEnabled = true;
+
 // Middleware
 app.use(express.json());
 app.use(cors());
 app.use(express.static('public')); // For serving the web UI
+
+// Endpoint to check server status
+app.get('/api/server/status', (req, res) => {
+    console.log('Received /api/server/status request');
+    res.json({ enabled: serverEnabled });
+});
+
+// Endpoint to toggle server status
+app.post('/api/server/toggle', (req, res) => {
+    console.log('Received /api/server/toggle request:', JSON.stringify(req.body, null, 2));
+    
+    if (req.body && typeof req.body.enabled === 'boolean') {
+        serverEnabled = req.body.enabled;
+        console.log(`Server ${serverEnabled ? 'enabled' : 'disabled'}`);
+        res.json({ success: true, enabled: serverEnabled });
+    } else {
+        console.error('Invalid toggle request');
+        res.status(400).json({ success: false, message: 'Invalid request. Expected { enabled: boolean }' });
+    }
+});
 
 // Endpoint to handle chat completions (similar to Ollama's /api/chat)
 app.post('/api/chat', (req, res) => {
     console.log('Received /api/chat request:', JSON.stringify(req.body, null, 2));
     
     try {
+        // Check if server is enabled
+        if (!serverEnabled) {
+            throw new Error('Server is currently disabled');
+        }
+        
         // Validate incoming request
         if (!req.body.model) {
             throw new Error('Missing required field: model');
@@ -56,6 +84,14 @@ app.post('/api/chat', (req, res) => {
 // Endpoint to list available models (similar to Ollama's /api/tags)
 app.get('/api/tags', (req, res) => {
     console.log('Received /api/tags request');
+    
+    // Check if server is enabled
+    if (!serverEnabled) {
+        return res.status(200).json({ 
+            models: [],
+            error: 'Server is currently disabled'
+        });
+    }
     
     // Create a fake list of models
     const models = {

@@ -3,141 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PseudoLlama - Ollama Simulator</title>
+    <title>RooMin WebUI</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             line-height: 1.6;
             color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        h1 {
-            color: #2c3e50;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 0;
         }
         .container {
-            background-color: #f9f9f9;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #e9eef6;
+            border-radius: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .form-group {
-            margin-bottom: 15px;
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 32px;
         }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
         }
-        select, textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            margin-right: 15px;
         }
-        textarea {
-            min-height: 100px;
-            resize: vertical;
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
         }
-        button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
+        .slider {
+            position: absolute;
             cursor: pointer;
-            font-size: 16px;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
         }
-        button:hover {
-            background-color: #2980b9;
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
         }
-        #response {
-            margin-top: 20px;
+        input:checked + .slider {
+            background-color: #a3e4a3;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .status-text {
+            font-size: 18px;
+        }
+        .test-button {
+            display: block;
+            width: 200px;
+            margin: 0 auto 30px;
+            padding: 12px 20px;
+            background-color: white;
+            color: #333;
+            border: 2px solid #333;
+            border-radius: 50px;
+            font-size: 18px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .test-button:hover {
             background-color: #f0f0f0;
-            border-left: 4px solid #3498db;
-            padding: 15px;
-            border-radius: 4px;
+        }
+        .output-container {
+            background-color: white;
+            border: 2px solid #333;
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 200px;
+            margin-bottom: 20px;
+            font-family: monospace;
             white-space: pre-wrap;
-            overflow-wrap: break-word;
         }
         .loading {
-            display: none;
-            margin-top: 20px;
             text-align: center;
-            color: #666;
-        }
-        .error {
-            color: #e74c3c;
-            margin-top: 10px;
+            display: none;
+            margin: 10px 0;
         }
     </style>
 </head>
 <body>
-    <h1>PseudoLlama - Ollama Simulator</h1>
     <div class="container">
-        <div class="form-group">
-            <label for="model-select">Select Model:</label>
-            <select id="model-select">
-                <option value="pseudollama:latest">PseudoLlama</option>
-                <option value="random-generator:latest">Random Number Generator</option>
-            </select>
+        <h1>RooMin WebUI</h1>
+        
+        <div class="toggle-container">
+            <label class="toggle-switch">
+                <input type="checkbox" id="server-toggle" checked>
+                <span class="slider"></span>
+            </label>
+            <span class="status-text" id="server-status">Server is running (Toggle to disable)</span>
         </div>
-        <div class="form-group">
-            <label for="message">Message:</label>
-            <textarea id="message" placeholder="Enter your message here..."></textarea>
-        </div>
-        <button id="send-button">Send Message</button>
-        <div id="error" class="error"></div>
-        <div id="loading" class="loading">Processing request...</div>
-        <div id="response"></div>
+        
+        <button class="test-button" id="test-button">Test local model</button>
+        
+        <div class="loading" id="loading">Testing...</div>
+        
+        <div class="output-container" id="output">[test output appears here]</div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const modelSelect = document.getElementById('model-select');
-            const messageInput = document.getElementById('message');
-            const sendButton = document.getElementById('send-button');
-            const responseDiv = document.getElementById('response');
-            const errorDiv = document.getElementById('error');
-            const loadingDiv = document.getElementById('loading');
-
-            // Fetch available models from the server
-            fetch('/api/tags')
-                .then(response => response.json())
-                .then(data => {
-                    // Clear the select element
-                    modelSelect.innerHTML = '';
-                    
-                    // Add options for each model
-                    data.models.forEach(model => {
-                        const option = document.createElement('option');
-                        option.value = model.model;
-                        option.textContent = model.name;
-                        modelSelect.appendChild(option);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching models:', error);
-                    errorDiv.textContent = 'Error loading models. Please try again later.';
-                });
-
-            // Handle send button click
-            sendButton.addEventListener('click', async () => {
-                const model = modelSelect.value;
-                const message = messageInput.value.trim();
+            const serverToggle = document.getElementById('server-toggle');
+            const serverStatus = document.getElementById('server-status');
+            const testButton = document.getElementById('test-button');
+            const outputContainer = document.getElementById('output');
+            const loadingIndicator = document.getElementById('loading');
+            
+            // Server toggle functionality
+            serverToggle.addEventListener('change', async () => {
+                const isEnabled = serverToggle.checked;
                 
-                if (!message) {
-                    errorDiv.textContent = 'Please enter a message.';
+                try {
+                    const response = await fetch('/api/server/toggle', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ enabled: isEnabled })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        serverStatus.textContent = isEnabled 
+                            ? 'Server is running (Toggle to disable)' 
+                            : 'Server is disabled (Toggle to enable)';
+                    } else {
+                        alert('Failed to toggle server: ' + data.message);
+                        // Revert the toggle if the operation failed
+                        serverToggle.checked = !isEnabled;
+                    }
+                } catch (error) {
+                    console.error('Error toggling server:', error);
+                    alert('Error communicating with the server');
+                    // Revert the toggle if there was an error
+                    serverToggle.checked = !isEnabled;
+                }
+            });
+            
+            // Test button functionality
+            testButton.addEventListener('click', async () => {
+                if (!serverToggle.checked) {
+                    outputContainer.textContent = 'Server is disabled. Enable it first to test.';
                     return;
                 }
                 
-                errorDiv.textContent = '';
-                responseDiv.textContent = '';
-                loadingDiv.style.display = 'block';
+                outputContainer.textContent = '';
+                loadingIndicator.style.display = 'block';
                 
                 try {
                     const response = await fetch('/api/chat', {
@@ -146,11 +185,11 @@
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            model: model,
+                            model: 'pseudollama:latest',
                             messages: [
                                 {
                                     role: 'user',
-                                    content: message
+                                    content: 'Test message'
                                 }
                             ]
                         })
@@ -159,17 +198,30 @@
                     const data = await response.json();
                     
                     if (data.message && data.message.content) {
-                        responseDiv.textContent = data.message.content;
+                        outputContainer.textContent = JSON.stringify(data, null, 2);
                     } else {
-                        responseDiv.textContent = 'No response content received.';
+                        outputContainer.textContent = 'No response content received.';
                     }
                 } catch (error) {
-                    console.error('Error sending message:', error);
-                    errorDiv.textContent = 'Error communicating with the server. Please try again later.';
+                    console.error('Error testing server:', error);
+                    outputContainer.textContent = 'Error communicating with the server: ' + error.message;
                 } finally {
-                    loadingDiv.style.display = 'none';
+                    loadingIndicator.style.display = 'none';
                 }
             });
+            
+            // Check server status on page load
+            fetch('/api/server/status')
+                .then(response => response.json())
+                .then(data => {
+                    serverToggle.checked = data.enabled;
+                    serverStatus.textContent = data.enabled 
+                        ? 'Server is running (Toggle to disable)' 
+                        : 'Server is disabled (Toggle to enable)';
+                })
+                .catch(error => {
+                    console.error('Error checking server status:', error);
+                });
         });
     </script>
 </body>
