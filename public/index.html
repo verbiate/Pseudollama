@@ -69,14 +69,7 @@
             align-items: center;
             margin-bottom: 20px;
         }
-        .active {
-            color: #4CAF50;
-            font-weight: bold;
-        }
-        .inactive {
-            color: #F44336;
-            font-weight: bold;
-        }
+        /* Removed active/inactive indicators */
         .form-group {
             margin-bottom: 20px;
         }
@@ -261,7 +254,6 @@
             <div class="model-section" id="openrouter-section">
                 <div class="model-section-header">
                     <h3>Remote model (via OpenRouter)</h3>
-                    <span class="active">Active</span>
                 </div>
                 
                 <div class="form-group">
@@ -302,7 +294,6 @@
             <div class="model-section" id="lmstudio-section">
                 <div class="model-section-header">
                     <h3>Local model (via LM Studio)</h3>
-                    <span class="active">Active</span>
                 </div>
                 
                 <div class="form-group">
@@ -442,8 +433,7 @@
                             testLMStudioConnection();
                         }
                         
-                        // Update active status
-                        updateActiveStatus(config.selectedModelType);
+                        // Active status indicators removed
                         
                         // Update test dropdown
                         testModelSelect.value = config.selectedModelType;
@@ -466,23 +456,7 @@
                 }
             };
             
-            // Update active status
-            const updateActiveStatus = (selectedType) => {
-                const openrouterStatus = document.querySelector('#openrouter-section .model-section-header span');
-                const lmstudioStatus = document.querySelector('#lmstudio-section .model-section-header span');
-                
-                if (selectedType === 'openrouter') {
-                    openrouterStatus.textContent = 'Active';
-                    openrouterStatus.className = 'active';
-                    lmstudioStatus.textContent = 'Inactive';
-                    lmstudioStatus.className = 'inactive';
-                } else {
-                    openrouterStatus.textContent = 'Inactive';
-                    openrouterStatus.className = 'inactive';
-                    lmstudioStatus.textContent = 'Active';
-                    lmstudioStatus.className = 'active';
-                }
-            };
+            // Update active status function removed
             
             // Function to test OpenRouter connection
             const testOpenRouterConnection = async () => {
@@ -621,8 +595,7 @@
                             configSuccessMessage.style.display = 'none';
                         }, 3000);
                         
-                        // Update active status
-                        updateActiveStatus(config.selectedModelType);
+                        // Active status indicators removed
                     } else {
                         configErrorMessage.textContent = data.message || 'Failed to save configuration';
                         configErrorMessage.style.display = 'block';
