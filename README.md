@@ -1,6 +1,6 @@
 # PseudoLlama Server
 
-A server that simulates Ollama API responses with custom content.
+A server that simulates Ollama API responses with custom content. Allows you to pipe through responses from LM Studio or OpenRouter to any Ollama-compatible endpoint.
 
 ## Overview
 
