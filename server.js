@@ -654,8 +654,13 @@ app.post('/api/content', (req, res) => {
 
 // Helper function to determine if a request is coming from the WebUI
 const isWebUIRequest = (req) => {
+    // Add debug logging
+    console.log(`[isWebUIRequest] req.headers: ${JSON.stringify(req.headers || 'undefined')}`);
+    console.log(`[isWebUIRequest] req.headers?.referer: ${req.headers?.referer || 'undefined'}`);
+    
     // WebUI typically uses OpenAI format but identifies itself in the referer
-    return req.headers.referer && req.headers.referer.includes('localhost:12345');
+    // Add null check for req.headers
+    return req.headers && req.headers.referer && req.headers.referer.includes('localhost:12345');
 };
 
 // Helper function to process chat requests (used by both Ollama and OpenAI endpoints)
@@ -697,10 +702,33 @@ const processChatRequest = async (req, res, isOpenAIFormat = false) => {
         const modelName = model.replace(':latest', '');
         console.log(`[MODEL SELECTION] Original model=${model}, parsed modelName=${modelName}, config.selectedModelType=${config.selectedModelType}`);
         
+        // Debug the request object
+        console.log(`[MODEL SELECTION] req.headers exists: ${!!req?.headers}`);
+        console.log(`[MODEL SELECTION] req object keys: ${Object.keys(req || {}).join(', ')}`);
+        
+        // Check if this is a request from the pseudo server (not the web UI)
+        let isPseudoServerRequest = false;
+        try {
+            const webUIRequestResult = isWebUIRequest(req);
+            console.log(`[MODEL SELECTION] isWebUIRequest result: ${webUIRequestResult}`);
+            isPseudoServerRequest = !webUIRequestResult && (modelName === 'remote' || model === 'remote:latest');
+            console.log(`[MODEL SELECTION] isPseudoServerRequest=${isPseudoServerRequest}`);
+        } catch (error) {
+            console.error(`[MODEL SELECTION] Error checking isWebUIRequest: ${error.message}`);
+            console.error(error.stack);
+        }
+        
         // First check for specific model identifier in the request
         // This ensures we respect the actual model requested, not just the config
         if (modelName === 'openrouter' || model === 'openrouter:latest' ||
-            model.includes('openrouter') || config.selectedModelType === 'openrouter') {
+            model.includes('openrouter') || model === 'OpenRouter API' ||
+            model === 'Remote Pseudo Model' || modelName === 'Remote Pseudo Model' ||
+            config.selectedModelType === 'openrouter' || isPseudoServerRequest) {
+            
+            // If this is a request from the pseudo server, log it
+            if (isPseudoServerRequest) {
+                console.log('[MODEL SELECTION] Routing remote pseudo model request to OpenRouter');
+            }
             // Validate OpenRouter API key
             if (!config.openrouter?.apiKey) {
                 throw new Error('OpenRouter API key is not configured. Please set it in the web UI.');
@@ -711,8 +739,28 @@ const processChatRequest = async (req, res, isOpenAIFormat = false) => {
                 console.log('Forwarding request to OpenRouter');
                 
                 // Prepare the OpenRouter request
+                let openRouterModel = config.openrouter?.model || 'google/gemini-2.0-flash-001'; // Default model
+                
+                // If this is a specific OpenRouter model request, use that model
+                // But only if it's a valid OpenRouter model ID
+                if (modelName !== 'openrouter' &&
+                    modelName !== 'remote' &&
+                    modelName !== 'OpenRouter API' &&
+                    model !== 'OpenRouter API' &&
+                    modelName !== 'Remote Pseudo Model' &&
+                    model !== 'Remote Pseudo Model') {
+                    openRouterModel = modelName;
+                } else if (modelName === 'OpenRouter API' || model === 'OpenRouter API' ||
+                          modelName === 'Remote Pseudo Model' || model === 'Remote Pseudo Model') {
+                    // Use the default model from config for special pseudo models
+                    openRouterModel = config.openrouter?.model || 'google/gemini-2.0-flash-001';
+                    console.log(`Using default OpenRouter model ${openRouterModel} for model name: ${model}`);
+                }
+                
+                console.log(`[OPENROUTER REQUEST] Using model: ${openRouterModel}`);
+                
                 const openRouterRequest = {
-                    model: modelName !== 'openrouter' ? modelName : (config.openrouter?.model || 'google/gemini-2.0-flash-001'), // Use configured model or default
+                    model: openRouterModel,
                     messages: messages,
                     stream: stream
                 };
@@ -844,11 +892,21 @@ const processChatRequest = async (req, res, isOpenAIFormat = false) => {
         console.log(`[LMSTUDIO CHECK] Condition values: (model === 'lmstudio:latest')=${model === 'lmstudio:latest'}, (modelName === 'lmstudio')=${modelName === 'lmstudio'}, (config.selectedModelType === 'lmstudio')=${config.selectedModelType === 'lmstudio'}`);
         
         // Modified condition to make sure OpenRouter requests don't get processed by LMStudio handler
-        if ((model === 'lmstudio:latest' || modelName === 'lmstudio') ||
+        // Also exclude remote pseudo model requests
+        let isPseudoServerRemoteRequest = false;
+        try {
+            isPseudoServerRemoteRequest = !isWebUIRequest(req) && (modelName === 'remote' || model === 'remote:latest');
+        } catch (error) {
+            console.error(`[LMSTUDIO CHECK] Error checking isPseudoServerRemoteRequest: ${error.message}`);
+        }
+        if ((model === 'lmstudio:latest' || modelName === 'lmstudio' || model === 'LM Studio') ||
             (config.selectedModelType === 'lmstudio' &&
              modelName !== 'openrouter' &&
              model !== 'openrouter:latest' &&
-             !model.includes('openrouter'))) {
+             model !== 'OpenRouter API' &&
+             model !== 'Remote Pseudo Model' &&
+             !model.includes('openrouter') &&
+             !isPseudoServerRemoteRequest)) {
             console.log('[LMSTUDIO CHECK] LMStudio condition triggered - attempting to connect to LMStudio');
             // Validate LMStudio URL
             if (!config.lmstudio?.url) {
@@ -1103,6 +1161,8 @@ app.post('/api/chat', async (req, res) => {
 // Endpoint to handle text generation (Ollama's /api/generate)
 app.post('/api/generate', (req, res) => {
     console.log('Received Ollama-style /api/generate request');
+    console.log('[GENERATE] Original request headers:', JSON.stringify(req.headers || 'undefined'));
+    console.log('[GENERATE] Original request body:', JSON.stringify(req.body || 'undefined'));
     
     // Check if server is enabled
     if (!serverEnabled) {
@@ -1142,14 +1202,24 @@ app.post('/api/generate', (req, res) => {
         }
     ];
     
-    // Create a chat-style request
+    // Create a chat-style request - make sure to explicitly copy headers
     const chatRequest = {
         ...req,
+        headers: req.headers, // Explicitly copy headers to ensure they're preserved
         body: {
             ...req.body,
             messages: chatMessages
         }
     };
+    
+    // Log the transformed request
+    console.log('[GENERATE] Transformed chatRequest:', JSON.stringify({
+        headers: chatRequest.headers ? 'headers present' : 'undefined',
+        body: {
+            ...chatRequest.body,
+            messages: chatRequest.body.messages.map(m => ({...m, content: `[${m.content.length} chars]`}))
+        }
+    }, null, 2));
     
     // Modify the response handlers to convert from chat format to generate format
     const originalJson = res.json;
@@ -1506,6 +1576,8 @@ app.get('/api/tags', (req, res) => {
             size: 0,
             digest: 'n/a'
         });
+        
+        // Remote Pseudo Model removed as requested
     }
     
     // Add LMStudio model if configured
@@ -1553,6 +1625,8 @@ app.get('/v1/models', (req, res) => {
             created: Math.floor(Date.now() / 1000),
             owned_by: "pseudollama"
         });
+        
+        // Remote Pseudo Model removed as requested
     }
     
     // Add LMStudio model if configured
