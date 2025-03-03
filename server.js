@@ -193,18 +193,49 @@ app.use(cors());
 // Debug logging middleware - add this before other routes
 app.use((req, res, next) => {
     console.log(`\n[REQUEST] ${new Date().toISOString()} - ${req.method} ${req.url}`);
-    console.log(`[HEADERS] ${JSON.stringify(req.headers, null, 2)}`);
+    
+    // Only log headers for non-model endpoints to reduce log size
+    if (!req.url.includes('/models') && !req.url.includes('/v1/models')) {
+        // Log only essential headers, not all of them
+        const essentialHeaders = {
+            'content-type': req.headers['content-type'],
+            'user-agent': req.headers['user-agent'],
+            'referer': req.headers['referer']
+        };
+        console.log(`[ESSENTIAL HEADERS] ${JSON.stringify(essentialHeaders)}`);
+    }
     
     if (req.method !== 'GET') {
-        const bodyClone = JSON.parse(JSON.stringify(req.body || {}));
-        // Don't log potentially large message content
-        if (bodyClone.messages) {
-            bodyClone.messages = bodyClone.messages.map(msg => ({
-                ...msg,
-                content: msg.content ? `[${msg.content.length} chars]` : null
-            }));
+        // For non-GET requests, log minimal body information
+        if (req.body) {
+            const logInfo = {};
+            
+            // For chat/completion requests, just log message count and model
+            if (req.body.messages) {
+                logInfo.messageCount = req.body.messages.length;
+                logInfo.model = req.body.model;
+                logInfo.stream = req.body.stream;
+            } else if (req.body.prompt) {
+                logInfo.promptLength = req.body.prompt.length;
+                logInfo.model = req.body.model;
+            } else {
+                // For other requests, create a minimal summary
+                Object.keys(req.body).forEach(key => {
+                    if (typeof req.body[key] === 'string') {
+                        logInfo[key] = req.body[key].length > 50 ?
+                            `[${req.body[key].length} chars]` : req.body[key];
+                    } else if (Array.isArray(req.body[key])) {
+                        logInfo[key] = `[Array with ${req.body[key].length} items]`;
+                    } else if (typeof req.body[key] === 'object' && req.body[key] !== null) {
+                        logInfo[key] = '[Object]';
+                    } else {
+                        logInfo[key] = req.body[key];
+                    }
+                });
+            }
+            
+            console.log(`[BODY SUMMARY] ${JSON.stringify(logInfo)}`);
         }
-        console.log(`[BODY] ${JSON.stringify(bodyClone, null, 2)}`);
     }
     
     // Store original methods to track response
@@ -674,7 +705,7 @@ app.post('/api/config', (req, res) => {
 
 // Endpoint to toggle server status
 app.post('/api/server/toggle', (req, res) => {
-    console.log('Received /api/server/toggle request:', JSON.stringify(req.body, null, 2));
+    console.log(`Received /api/server/toggle request, enabled: ${req.body?.enabled}`);
     
     if (req.body && typeof req.body.enabled === 'boolean') {
         serverEnabled = req.body.enabled;
@@ -703,7 +734,7 @@ app.get('/api/content', (req, res) => {
 
 // Endpoint to update the content
 app.post('/api/content', (req, res) => {
-    console.log('Received /api/content update request:', JSON.stringify(req.body, null, 2));
+    console.log(`Received /api/content update request, content length: ${req.body?.content?.length || 0}`);
     
     if (!serverEnabled) {
         return res.status(503).json({ 
@@ -730,9 +761,10 @@ app.post('/api/content', (req, res) => {
 
 // Helper function to determine if a request is coming from the WebUI
 const isWebUIRequest = (req) => {
-    // Add debug logging
-    console.log(`[isWebUIRequest] req.headers: ${JSON.stringify(req.headers || 'undefined')}`);
-    console.log(`[isWebUIRequest] req.headers?.referer: ${req.headers?.referer || 'undefined'}`);
+    // Only log the referer, not the entire headers object
+    if (req.headers?.referer) {
+        console.log(`[isWebUIRequest] referer: ${req.headers.referer}`);
+    }
     
     // WebUI typically uses OpenAI format but identifies itself in the referer
     // Add null check for req.headers
@@ -778,9 +810,8 @@ const processChatRequest = async (req, res, isOpenAIFormat = false) => {
         const modelName = model.replace(':latest', '');
         console.log(`[MODEL SELECTION] Original model=${model}, parsed modelName=${modelName}, config.selectedModelType=${config.selectedModelType}`);
         
-        // Debug the request object
-        console.log(`[MODEL SELECTION] req.headers exists: ${!!req?.headers}`);
-        console.log(`[MODEL SELECTION] req object keys: ${Object.keys(req || {}).join(', ')}`);
+        // Minimal debug logging for request object
+        console.log(`[MODEL SELECTION] Processing request with model: ${model}`);
         
         // Check if this is a request from the pseudo server (not the web UI)
         let isPseudoServerRequest = false;
@@ -1032,10 +1063,7 @@ const processChatRequest = async (req, res, isOpenAIFormat = false) => {
                     max_tokens: config.lmstudio.maxTokens || 2048
                 };
                 
-                console.log(`[LMSTUDIO REQUEST] Request details: ${JSON.stringify({
-                    ...lmStudioRequest,
-                    messages: lmStudioRequest.messages.map(m => ({...m, content: `[${m.content.length} chars]`}))
-                }, null, 2)}`);
+                console.log(`[LMSTUDIO REQUEST] Request with ${messages.length} messages, stream=${stream}, model=${lmStudioRequest.model}`);
                 
                 if (stream) {
                     // Handle streaming response from LMStudio
@@ -1238,7 +1266,7 @@ const processChatRequest = async (req, res, isOpenAIFormat = false) => {
                 },
                 done: true
             };
-            console.log('Sending Ollama-style error response:', JSON.stringify(ollamaErrorResponse, null, 2));
+            console.log(`Sending Ollama-style error response: ${error.message}`);
             return res.status(200).json(ollamaErrorResponse); // Ollama returns 200 even for errors
         }
     }
@@ -1253,8 +1281,8 @@ app.post('/api/chat', async (req, res) => {
 // Endpoint to handle text generation (Ollama's /api/generate)
 app.post('/api/generate', (req, res) => {
     console.log('Received Ollama-style /api/generate request');
-    console.log('[GENERATE] Original request headers:', JSON.stringify(req.headers || 'undefined'));
-    console.log('[GENERATE] Original request body:', JSON.stringify(req.body || 'undefined'));
+    // Log minimal information about the request
+    console.log(`[GENERATE] Request for model: ${req.body?.model || 'unknown'}, prompt length: ${req.body?.prompt?.length || 0}`);
     
     // Check if server is enabled
     if (!serverEnabled) {
@@ -1304,14 +1332,9 @@ app.post('/api/generate', (req, res) => {
         }
     };
     
-    // Log the transformed request
-    console.log('[GENERATE] Transformed chatRequest:', JSON.stringify({
-        headers: chatRequest.headers ? 'headers present' : 'undefined',
-        body: {
-            ...chatRequest.body,
-            messages: chatRequest.body.messages.map(m => ({...m, content: `[${m.content.length} chars]`}))
-        }
-    }, null, 2));
+    // Log a simplified version of the transformed request
+    console.log('[GENERATE] Transformed chatRequest with prompt length:',
+        req.body.prompt ? req.body.prompt.length : 'unknown');
     
     // Modify the response handlers to convert from chat format to generate format
     const originalJson = res.json;
@@ -1524,7 +1547,7 @@ app.post('/v1/completions', (req, res) => {
 
 // Endpoint to handle model pulling requests (similar to Ollama's /api/pull)
 app.post('/api/pull', (req, res) => {
-    console.log('Received /api/pull request:', JSON.stringify(req.body, null, 2));
+    console.log(`Received /api/pull request for model: ${req.body?.name || 'unknown'}`);
     
     // Check if server is enabled
     if (!serverEnabled) {
@@ -1575,8 +1598,7 @@ app.post('/api/embeddings', (req, res) => {
         embedding: embeddings
     };
     
-    console.log('Sending /api/embeddings response (showing first 5 values):',
-        JSON.stringify({embedding: embeddings.slice(0, 5)}, null, 2));
+    console.log(`Sending /api/embeddings response with ${dimensions} dimensions`);
     res.json(response);
 });
 
@@ -1636,11 +1658,7 @@ app.post('/v1/embeddings', (req, res) => {
         }
     };
     
-    console.log('Sending OpenAI-style /v1/embeddings response (showing first 5 values):',
-        JSON.stringify({
-            ...response,
-            data: [{...response.data[0], embedding: embeddings.slice(0, 5)}]
-        }, null, 2));
+    console.log(`Sending OpenAI-style /v1/embeddings response with ${dimensions} dimensions`);
     res.json(response);
 });
 
@@ -1687,7 +1705,7 @@ app.get('/api/tags', (req, res) => {
         models: modelsList
     };
 
-    console.log('Sending Ollama-style /api/tags response:', JSON.stringify(models, null, 2));
+    console.log(`Sending Ollama-style /api/tags response with ${modelsList.length} models`);
     res.json(models);
 });
 
