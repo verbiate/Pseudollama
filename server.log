@@ -1,0 +1,130 @@
+PseudoLlama server running on http://localhost:12345
+Debug logging enabled - all requests and responses will be logged
+
+[REQUEST] 2025-03-03T05:25:00.955Z - GET /api/openrouter/models
+[HEADERS] {
+  "host": "localhost:12345",
+  "user-agent": "curl/8.7.1",
+  "accept": "*/*"
+}
+Received /api/openrouter/models request
+Fetching OpenRouter models using curl command
+Executing curl command
+Curl command successful
+[RESPONSE] Status: 200 for GET /api/openrouter/models
+[RESPONSE] Status: 200 for GET /api/openrouter/models
+[RESPONSE] Status: 200 for GET /api/openrouter/models
+
+[REQUEST] 2025-03-03T05:25:27.348Z - GET /api/openrouter/models
+[HEADERS] {
+  "host": "localhost:12345",
+  "user-agent": "curl/8.7.1",
+  "accept": "*/*"
+}
+Received /api/openrouter/models request
+Fetching OpenRouter models using curl command
+Executing curl command
+Curl command successful
+[RESPONSE] Status: 200 for GET /api/openrouter/models
+[RESPONSE] Status: 200 for GET /api/openrouter/models
+[RESPONSE] Status: 200 for GET /api/openrouter/models
+
+[REQUEST] 2025-03-03T05:26:01.371Z - GET /
+[HEADERS] {
+  "host": "localhost:12345",
+  "sec-fetch-dest": "document",
+  "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15",
+  "upgrade-insecure-requests": "1",
+  "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  "sec-fetch-site": "none",
+  "sec-fetch-mode": "navigate",
+  "accept-language": "en-US,en;q=0.9",
+  "priority": "u=0, i",
+  "accept-encoding": "gzip, deflate",
+  "cookie": "_streamlit_xsrf=2|142e586c|f557e6b9df87e9bc8b5cbf11b73c2ea7|1740898186; ajs_anonymous_id=8eb40664-bfe1-402f-bad2-f39e397e363c",
+  "connection": "keep-alive"
+}
+[RESPONSE] Status: 200 for GET /
+
+[REQUEST] 2025-03-03T05:26:01.378Z - GET /api/server/status
+[HEADERS] {
+  "host": "localhost:12345",
+  "sec-fetch-dest": "empty",
+  "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15",
+  "accept": "*/*",
+  "referer": "http://localhost:12345/",
+  "sec-fetch-site": "same-origin",
+  "sec-fetch-mode": "cors",
+  "accept-language": "en-US,en;q=0.9",
+  "priority": "u=3, i",
+  "accept-encoding": "gzip, deflate",
+  "cookie": "_streamlit_xsrf=2|142e586c|f557e6b9df87e9bc8b5cbf11b73c2ea7|1740898186; ajs_anonymous_id=8eb40664-bfe1-402f-bad2-f39e397e363c",
+  "connection": "keep-alive"
+}
+Received /api/server/status request
+[RESPONSE] Status: 200 for GET /api/server/status
+[RESPONSE] Status: 200 for GET /api/server/status
+[RESPONSE] Status: 200 for GET /api/server/status
+
+[REQUEST] 2025-03-03T05:26:01.384Z - GET /api/config
+[HEADERS] {
+  "host": "localhost:12345",
+  "accept": "*/*",
+  "sec-fetch-site": "same-origin",
+  "if-none-match": "W/\"247-O3g6pPi/s+/AIqwWxB5TM4ctuIM\"",
+  "sec-fetch-mode": "cors",
+  "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15",
+  "referer": "http://localhost:12345/",
+  "sec-fetch-dest": "empty",
+  "accept-language": "en-US,en;q=0.9",
+  "priority": "u=3, i",
+  "accept-encoding": "gzip, deflate",
+  "cookie": "_streamlit_xsrf=2|142e586c|f557e6b9df87e9bc8b5cbf11b73c2ea7|1740898186; ajs_anonymous_id=8eb40664-bfe1-402f-bad2-f39e397e363c",
+  "connection": "keep-alive"
+}
+Received /api/config request
+[RESPONSE] Status: 200 for GET /api/config
+[RESPONSE] Status: 200 for GET /api/config
+[RESPONSE] Status: 304 for GET /api/config
+
+[REQUEST] 2025-03-03T05:26:01.385Z - GET /api/content
+[HEADERS] {
+  "host": "localhost:12345",
+  "accept": "*/*",
+  "sec-fetch-site": "same-origin",
+  "if-none-match": "W/\"105-61fOou98I+kRhHhpMjhQX9b4vFc\"",
+  "sec-fetch-mode": "cors",
+  "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15",
+  "referer": "http://localhost:12345/",
+  "sec-fetch-dest": "empty",
+  "accept-language": "en-US,en;q=0.9",
+  "priority": "u=3, i",
+  "accept-encoding": "gzip, deflate",
+  "cookie": "_streamlit_xsrf=2|142e586c|f557e6b9df87e9bc8b5cbf11b73c2ea7|1740898186; ajs_anonymous_id=8eb40664-bfe1-402f-bad2-f39e397e363c",
+  "connection": "keep-alive"
+}
+Received /api/content request
+[RESPONSE] Status: 200 for GET /api/content
+[RESPONSE] Status: 200 for GET /api/content
+[RESPONSE] Status: 304 for GET /api/content
+
+[REQUEST] 2025-03-03T05:26:01.387Z - GET /api/lmstudio/models
+[HEADERS] {
+  "host": "localhost:12345",
+  "accept": "*/*",
+  "sec-fetch-site": "same-origin",
+  "if-none-match": "W/\"3d56-7Blg2rqPvS7H0uUGS3wB8y41RXQ\"",
+  "sec-fetch-mode": "cors",
+  "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15",
+  "referer": "http://localhost:12345/",
+  "sec-fetch-dest": "empty",
+  "accept-language": "en-US,en;q=0.9",
+  "priority": "u=3, i",
+  "accept-encoding": "gzip, deflate",
+  "cookie": "_streamlit_xsrf=2|142e586c|f557e6b9df87e9bc8b5cbf11b73c2ea7|1740898186; ajs_anonymous_id=8eb40664-bfe1-402f-bad2-f39e397e363c",
+  "connection": "keep-alive"
+}
+Received /api/lmstudio/models request
+[RESPONSE] Status: 200 for GET /api/lmstudio/models
+[RESPONSE] Status: 200 for GET /api/lmstudio/models
+[RESPONSE] Status: 304 for GET /api/lmstudio/models

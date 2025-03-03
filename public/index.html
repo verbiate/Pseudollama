@@ -14,129 +14,214 @@
             padding: 0;
         }
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 40px auto;
             padding: 30px;
             background-color: #e9eef6;
             border-radius: 20px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        h1, h2 {
-            text-align: center;
+        h1, h2, h3 {
             color: #2c3e50;
-            margin-bottom: 30px;
         }
         h1 {
             font-size: 32px;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: normal;
         }
-        h2 {
-            font-size: 24px;
-            margin-top: 40px;
+        h3 {
+            font-size: 20px;
+            margin: 0;
         }
-        .toggle-container {
+        .server-status {
             display: flex;
             align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            gap: 10px;
+        }
+        .status-dot {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: #4CAF50;
+        }
+        .server-url {
+            text-decoration: underline;
+        }
+        .model-config {
+            background-color: white;
+            border-radius: 15px;
+            padding: 25px;
             margin-bottom: 30px;
         }
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-            margin-right: 15px;
+        .section-divider {
+            margin: 25px 0;
+            border: 0;
+            height: 1px;
+            background-color: #ddd;
         }
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
+        .model-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
+        .active {
+            color: #4CAF50;
+            font-weight: bold;
         }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
+        .form-group {
+            margin-bottom: 20px;
         }
-        input:checked + .slider {
-            background-color: #a3e4a3;
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
         }
-        input:checked + .slider:before {
-            transform: translateX(26px);
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
         }
-        .status-text {
-            font-size: 18px;
+        .input-with-button {
+            display: flex;
+            gap: 10px;
+        }
+        .input-with-button input {
+            flex: 1;
         }
         .button {
             display: inline-block;
-            padding: 12px 20px;
+            padding: 10px 15px;
             background-color: white;
             color: #333;
-            border: 2px solid #333;
-            border-radius: 50px;
-            font-size: 18px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
             cursor: pointer;
             text-align: center;
             transition: all 0.3s;
-            margin: 0 10px;
         }
         .button:hover {
             background-color: #f0f0f0;
         }
-        .test-button {
-            display: block;
-            width: 200px;
-            margin: 0 auto 30px;
+        .dropdown-container {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        .dropdown {
+            flex: 1;
+            position: relative;
+        }
+        .dropdown-select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .dropdown-select:after {
+            content: '▼';
+            font-size: 12px;
+        }
+        .dropdown-options {
+            position: absolute;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            z-index: 10;
+            display: none;
+        }
+        .dropdown-search {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 0;
+            background-color: white;
+            z-index: 1;
+        }
+        .dropdown-search input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .dropdown-loading {
+            padding: 15px;
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        .dropdown-no-results {
+            padding: 15px;
+            text-align: center;
+            color: #666;
+        }
+        .dropdown-option {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .dropdown-option:hover {
+            background-color: #f0f0f0;
+        }
+        .test-section {
+            margin-top: 40px;
+        }
+        .test-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .test-dropdown {
+            width: 300px;
         }
         .output-container {
             background-color: white;
-            border: 2px solid #333;
-            border-radius: 15px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
             padding: 20px;
-            min-height: 200px;
-            margin-bottom: 20px;
+            min-height: 150px;
             font-family: monospace;
             white-space: pre-wrap;
         }
-        .loading {
-            text-align: center;
-            display: none;
-            margin: 10px 0;
-        }
-        .editor-container {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 2px solid #ccc;
-        }
-        .editor-textarea {
-            width: 100%;
-            min-height: 150px;
-            padding: 15px;
-            border: 2px solid #333;
-            border-radius: 15px;
-            font-family: monospace;
-            font-size: 16px;
-            resize: vertical;
-            margin-bottom: 20px;
-        }
-        .button-container {
+        .connection-status {
             display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        .status-dot.connected {
+            background-color: #4CAF50;
+        }
+        .status-dot.connecting {
+            background-color: #FFC107;
+            animation: pulse 1.5s infinite;
+        }
+        .status-dot.error {
+            background-color: #F44336;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
         }
         .success-message, .error-message {
             text-align: center;
@@ -161,175 +246,656 @@
     <div class="container">
         <h1>RooMin WebUI</h1>
         
-        <div class="toggle-container">
-            <label class="toggle-switch">
-                <input type="checkbox" id="server-toggle" checked>
-                <span class="slider"></span>
-            </label>
-            <span class="status-text" id="server-status">Server is running (Toggle to disable)</span>
+        <div class="server-status">
+            <span class="status-dot"></span>
+            <span>Server is running on port 12345</span>
+            <a href="http://localhost:12345" class="server-url" target="_blank">http://localhost:12345</a>
         </div>
         
-        <button class="button test-button" id="test-button">Test local model</button>
-        
-        <div class="loading" id="loading">Testing...</div>
-        
-        <div class="output-container" id="output">[test output appears here]</div>
-        
-        <h2>Edit Content</h2>
-        
-        <div class="editor-container">
-            <textarea class="editor-textarea" id="content-editor" placeholder="Loading content..."></textarea>
-            
-            <div class="button-container">
-                <button class="button" id="save-button">Save Content</button>
-                <button class="button" id="reset-button">Reset</button>
+        <div class="model-config">
+            <!-- Remote model (OpenRouter) section -->
+            <div class="model-section" id="openrouter-section">
+                <div class="model-section-header">
+                    <h3>Remote model (via OpenRouter)</h3>
+                    <span class="active">Active</span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="openrouter-key">OpenRouter API Key:</label>
+                    <div class="input-with-button">
+                        <input type="text" id="openrouter-key" class="form-control" placeholder="Enter your OpenRouter API key">
+                        <button class="button" id="openrouter-test-connection">Test connection</button>
+                    </div>
+                    <div class="connection-status" id="openrouter-connection-status">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Not connected</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="openrouter-model">OpenRouter model:</label>
+                    <div class="dropdown-container">
+                        <div class="dropdown" id="openrouter-model-dropdown">
+                            <div class="dropdown-select" id="openrouter-selected-model">Loading models...</div>
+                            <div class="dropdown-options" id="openrouter-model-options">
+                                <div class="dropdown-search">
+                                    <input type="text" id="openrouter-model-search" placeholder="Search models...">
+                                </div>
+                                <div id="openrouter-model-list">
+                                    <div class="dropdown-loading">Loading models...</div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="openrouter-model-select" value="">
+                        </div>
+                        <button class="button" id="openrouter-refresh-button">Refresh list</button>
+                    </div>
+                </div>
             </div>
             
-            <div class="success-message" id="success-message">Content saved successfully!</div>
-            <div class="error-message" id="error-message"></div>
+            <hr class="section-divider">
+            
+            <!-- Local model (LM Studio) section -->
+            <div class="model-section" id="lmstudio-section">
+                <div class="model-section-header">
+                    <h3>Local model (via LM Studio)</h3>
+                    <span class="active">Active</span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="lmstudio-url">LM Studio URL & Port:</label>
+                    <div class="input-with-button">
+                        <input type="text" id="lmstudio-url" class="form-control" placeholder="http://localhost:1234/v1">
+                        <button class="button" id="lmstudio-test-connection">Test connection</button>
+                    </div>
+                    <div class="connection-status" id="lmstudio-connection-status">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Not connected</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="lmstudio-model">LM Studio model:</label>
+                    <div class="dropdown-container">
+                        <div class="dropdown" id="lmstudio-model-dropdown">
+                            <div class="dropdown-select" id="lmstudio-selected-model">Loading models...</div>
+                            <div class="dropdown-options" id="lmstudio-model-options">
+                                <div class="dropdown-search">
+                                    <input type="text" id="lmstudio-model-search" placeholder="Search models...">
+                                </div>
+                                <div id="lmstudio-model-list">
+                                    <div class="dropdown-loading">Loading models...</div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="lmstudio-model-select" value="">
+                        </div>
+                        <button class="button" id="lmstudio-refresh-button">Refresh list</button>
+                        <button class="button" id="lmstudio-advanced-button">Advanced options</button>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="button" id="save-config-button" style="display: block; margin: 20px auto;">Save Configuration</button>
+            <div class="success-message" id="config-success-message">Configuration saved successfully!</div>
+            <div class="error-message" id="config-error-message"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test a pseudo-model:</h3>
+            <div class="test-controls">
+                <div class="dropdown test-dropdown" id="test-model-dropdown">
+                    <div class="dropdown-select" id="test-selected-model">Remote model (via OpenRouter)</div>
+                    <div class="dropdown-options" id="test-model-options">
+                        <div class="dropdown-option" data-value="openrouter">Remote model (via OpenRouter)</div>
+                        <div class="dropdown-option" data-value="lmstudio">Local model (via LM Studio)</div>
+                    </div>
+                    <input type="hidden" id="test-model-select" value="openrouter">
+                </div>
+                <button class="button" id="test-button">Test selected model</button>
+            </div>
+            
+            <div class="output-container" id="output">[test output appears here]</div>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const serverToggle = document.getElementById('server-toggle');
-            const serverStatus = document.getElementById('server-status');
+            // Elements
+            const saveConfigButton = document.getElementById('save-config-button');
+            const configSuccessMessage = document.getElementById('config-success-message');
+            const configErrorMessage = document.getElementById('config-error-message');
             const testButton = document.getElementById('test-button');
             const outputContainer = document.getElementById('output');
-            const loadingIndicator = document.getElementById('loading');
-            const contentEditor = document.getElementById('content-editor');
-            const saveButton = document.getElementById('save-button');
-            const resetButton = document.getElementById('reset-button');
-            const successMessage = document.getElementById('success-message');
-            const errorMessage = document.getElementById('error-message');
             
-            let originalContent = '';
+            // OpenRouter elements
+            const openrouterKey = document.getElementById('openrouter-key');
+            const openrouterTestConnection = document.getElementById('openrouter-test-connection');
+            const openrouterConnectionStatus = document.getElementById('openrouter-connection-status');
+            const openrouterSelectedModel = document.getElementById('openrouter-selected-model');
+            const openrouterModelOptions = document.getElementById('openrouter-model-options');
+            const openrouterModelSearch = document.getElementById('openrouter-model-search');
+            const openrouterModelList = document.getElementById('openrouter-model-list');
+            const openrouterModelSelect = document.getElementById('openrouter-model-select');
+            const openrouterRefreshButton = document.getElementById('openrouter-refresh-button');
             
-            // Load content on page load
-            const loadContent = async () => {
+            // LMStudio elements
+            const lmstudioUrl = document.getElementById('lmstudio-url');
+            const lmstudioTestConnection = document.getElementById('lmstudio-test-connection');
+            const lmstudioConnectionStatus = document.getElementById('lmstudio-connection-status');
+            const lmstudioSelectedModel = document.getElementById('lmstudio-selected-model');
+            const lmstudioModelOptions = document.getElementById('lmstudio-model-options');
+            const lmstudioModelSearch = document.getElementById('lmstudio-model-search');
+            const lmstudioModelList = document.getElementById('lmstudio-model-list');
+            const lmstudioModelSelect = document.getElementById('lmstudio-model-select');
+            const lmstudioRefreshButton = document.getElementById('lmstudio-refresh-button');
+            const lmstudioAdvancedButton = document.getElementById('lmstudio-advanced-button');
+            
+            // Test elements
+            const testSelectedModel = document.getElementById('test-selected-model');
+            const testModelOptions = document.getElementById('test-model-options');
+            const testModelSelect = document.getElementById('test-model-select');
+            
+            // Configuration object
+            let config = {
+                selectedModelType: 'openrouter',
+                openrouter: {
+                    apiKey: '',
+                    model: 'sonnet-3.7'
+                },
+                lmstudio: {
+                    url: 'http://localhost:1234/v1',
+                    model: 'unsloth-phi-4'
+                }
+            };
+            
+            // Load configuration
+            const loadConfig = async () => {
                 try {
-                    const response = await fetch('/api/content');
+                    const response = await fetch('/api/config');
                     const data = await response.json();
                     
                     if (data.success) {
-                        contentEditor.value = data.content;
-                        originalContent = data.content;
+                        config = data.config;
+                        
+                        // Update OpenRouter section
+                        openrouterKey.value = config.openrouter?.apiKey || '';
+                        if (config.openrouter?.model) {
+                            openrouterModelSelect.value = config.openrouter.model;
+                            openrouterSelectedModel.textContent = config.openrouter.model;
+                        }
+                        
+                        // Test OpenRouter connection if API key is available
+                        if (config.openrouter?.apiKey) {
+                            testOpenRouterConnection();
+                        }
+                        
+                        // Update LMStudio section
+                        lmstudioUrl.value = config.lmstudio?.url || 'http://localhost:1234/v1';
+                        if (config.lmstudio?.model) {
+                            lmstudioModelSelect.value = config.lmstudio.model;
+                            lmstudioSelectedModel.textContent = config.lmstudio.model;
+                        }
+                        
+                        // Test LMStudio connection if URL is available
+                        if (config.lmstudio?.url) {
+                            testLMStudioConnection();
+                        }
+                        
+                        // Update active status
+                        updateActiveStatus(config.selectedModelType);
+                        
+                        // Update test dropdown
+                        testModelSelect.value = config.selectedModelType;
+                        testSelectedModel.textContent = config.selectedModelType === 'openrouter' ? 
+                            'Remote model (via OpenRouter)' : 'Local model (via LM Studio)';
                     } else {
-                        errorMessage.textContent = data.message || 'Failed to load content';
-                        errorMessage.style.display = 'block';
+                        configErrorMessage.textContent = data.message || 'Failed to load configuration';
+                        configErrorMessage.style.display = 'block';
                         setTimeout(() => {
-                            errorMessage.style.display = 'none';
+                            configErrorMessage.style.display = 'none';
                         }, 3000);
                     }
                 } catch (error) {
-                    console.error('Error loading content:', error);
-                    errorMessage.textContent = 'Error loading content: ' + error.message;
-                    errorMessage.style.display = 'block';
+                    console.error('Error loading configuration:', error);
+                    configErrorMessage.textContent = 'Error loading configuration: ' + error.message;
+                    configErrorMessage.style.display = 'block';
                     setTimeout(() => {
-                        errorMessage.style.display = 'none';
+                        configErrorMessage.style.display = 'none';
                     }, 3000);
                 }
             };
             
-            // Save content
-            saveButton.addEventListener('click', async () => {
-                const newContent = contentEditor.value;
+            // Update active status
+            const updateActiveStatus = (selectedType) => {
+                const openrouterStatus = document.querySelector('#openrouter-section .model-section-header span');
+                const lmstudioStatus = document.querySelector('#lmstudio-section .model-section-header span');
+                
+                if (selectedType === 'openrouter') {
+                    openrouterStatus.textContent = 'Active';
+                    openrouterStatus.className = 'active';
+                    lmstudioStatus.textContent = 'Inactive';
+                    lmstudioStatus.className = '';
+                } else {
+                    openrouterStatus.textContent = 'Inactive';
+                    openrouterStatus.className = '';
+                    lmstudioStatus.textContent = 'Active';
+                    lmstudioStatus.className = 'active';
+                }
+            };
+            
+            // Function to test OpenRouter connection
+            const testOpenRouterConnection = async () => {
+                const apiKey = openrouterKey.value || config.openrouter?.apiKey;
+                const statusDot = openrouterConnectionStatus.querySelector('.status-dot');
+                const statusText = openrouterConnectionStatus.querySelector('.status-text');
+                
+                // Show the connection status
+                openrouterConnectionStatus.style.display = 'flex';
+                
+                // Reset status classes
+                statusDot.classList.remove('connected', 'error', 'connecting');
+                
+                if (!apiKey) {
+                    statusDot.classList.add('error');
+                    statusText.textContent = 'No API key provided';
+                    return false;
+                }
+                
+                // Show connecting status
+                statusDot.classList.add('connecting');
+                statusText.textContent = 'Connecting...';
                 
                 try {
-                    const response = await fetch('/api/content', {
+                    // Test connection by fetching models
+                    const response = await fetch('/api/openrouter/models');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        statusDot.classList.remove('connecting');
+                        statusDot.classList.add('connected');
+                        statusText.textContent = `Connected (${data.models.length} models available)`;
+                        
+                        // Update the model dropdown with the fetched models
+                        updateOpenRouterModelDropdown(data.models);
+                        
+                        return true;
+                    } else {
+                        throw new Error(data.message || 'Failed to connect');
+                    }
+                } catch (error) {
+                    console.error('Connection test failed:', error);
+                    statusDot.classList.remove('connecting');
+                    statusDot.classList.add('error');
+                    statusText.textContent = `Connection failed: ${error.message}`;
+                    return false;
+                }
+            };
+            
+            // Function to test LMStudio connection
+            const testLMStudioConnection = async () => {
+                const url = lmstudioUrl.value || config.lmstudio?.url;
+                const statusDot = lmstudioConnectionStatus.querySelector('.status-dot');
+                const statusText = lmstudioConnectionStatus.querySelector('.status-text');
+                
+                // Show the connection status
+                lmstudioConnectionStatus.style.display = 'flex';
+                
+                // Reset status classes
+                statusDot.classList.remove('connected', 'error', 'connecting');
+                
+                if (!url) {
+                    statusDot.classList.add('error');
+                    statusText.textContent = 'No URL provided';
+                    return false;
+                }
+                
+                // Show connecting status
+                statusDot.classList.add('connecting');
+                statusText.textContent = 'Connecting...';
+                
+                try {
+                    // Update the config with the current URL value for the API call
+                    config.lmstudio.url = url;
+                    
+                    // Test connection by fetching models
+                    const response = await fetch('/api/lmstudio/models');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        statusDot.classList.remove('connecting');
+                        statusDot.classList.add('connected');
+                        statusText.textContent = `Connected (${data.models.length} models available)`;
+                        
+                        // Update the model dropdown with the fetched models
+                        updateLMStudioModelDropdown(data.models);
+                        
+                        return true;
+                    } else {
+                        throw new Error(data.message || 'Failed to connect');
+                    }
+                } catch (error) {
+                    console.error('Connection test failed:', error);
+                    statusDot.classList.remove('connecting');
+                    statusDot.classList.add('error');
+                    statusText.textContent = `Connection failed: ${error.message}`;
+                    return false;
+                }
+            };
+            
+            // OpenRouter test connection button
+            openrouterTestConnection.addEventListener('click', testOpenRouterConnection);
+            
+            // LMStudio test connection button
+            lmstudioTestConnection.addEventListener('click', testLMStudioConnection);
+            
+            // Save configuration
+            saveConfigButton.addEventListener('click', async () => {
+                const newConfig = {
+                    selectedModelType: testModelSelect.value,
+                    openrouter: {
+                        apiKey: openrouterKey.value,
+                        model: openrouterModelSelect.value
+                    },
+                    lmstudio: {
+                        url: lmstudioUrl.value,
+                        model: lmstudioModelSelect.value
+                    }
+                };
+                
+                try {
+                    const response = await fetch('/api/config', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ content: newContent })
+                        body: JSON.stringify(newConfig)
                     });
                     
                     const data = await response.json();
                     
                     if (data.success) {
-                        originalContent = newContent;
-                        successMessage.style.display = 'block';
+                        config = data.config;
+                        configSuccessMessage.style.display = 'block';
                         setTimeout(() => {
-                            successMessage.style.display = 'none';
+                            configSuccessMessage.style.display = 'none';
                         }, 3000);
+                        
+                        // Update active status
+                        updateActiveStatus(config.selectedModelType);
                     } else {
-                        errorMessage.textContent = data.message || 'Failed to save content';
-                        errorMessage.style.display = 'block';
+                        configErrorMessage.textContent = data.message || 'Failed to save configuration';
+                        configErrorMessage.style.display = 'block';
                         setTimeout(() => {
-                            errorMessage.style.display = 'none';
+                            configErrorMessage.style.display = 'none';
                         }, 3000);
                     }
                 } catch (error) {
-                    console.error('Error saving content:', error);
-                    errorMessage.textContent = 'Error saving content: ' + error.message;
-                    errorMessage.style.display = 'block';
+                    console.error('Error saving configuration:', error);
+                    configErrorMessage.textContent = 'Error saving configuration: ' + error.message;
+                    configErrorMessage.style.display = 'block';
                     setTimeout(() => {
-                        errorMessage.style.display = 'none';
+                        configErrorMessage.style.display = 'none';
                     }, 3000);
                 }
             });
             
-            // Reset content
-            resetButton.addEventListener('click', () => {
-                contentEditor.value = originalContent;
+            // Function to update OpenRouter model dropdown
+            const updateOpenRouterModelDropdown = (models) => {
+                // Clear existing options
+                openrouterModelList.innerHTML = '';
+                
+                if (!models || models.length === 0) {
+                    openrouterModelList.innerHTML = '<div class="dropdown-no-results">No models available</div>';
+                    return;
+                }
+                
+                // Sort models alphabetically by name
+                models.sort((a, b) => {
+                    const nameA = a.name || a.id;
+                    const nameB = b.name || b.id;
+                    return nameA.localeCompare(nameB);
+                });
+                
+                // Add new options
+                models.forEach(model => {
+                    const option = document.createElement('div');
+                    option.className = 'dropdown-option';
+                    option.dataset.value = model.id;
+                    option.textContent = model.name || model.id;
+                    
+                    // Add tooltip with description if available
+                    if (model.description) {
+                        option.title = model.description;
+                    }
+                    
+                    openrouterModelList.appendChild(option);
+                    
+                    // If this is the currently selected model, update the display
+                    if (model.id === openrouterModelSelect.value) {
+                        openrouterSelectedModel.textContent = model.name || model.id;
+                    }
+                });
+                
+                // If no model is selected yet, select the first one
+                if (!openrouterModelSelect.value && models.length > 0) {
+                    openrouterModelSelect.value = models[0].id;
+                    openrouterSelectedModel.textContent = models[0].name || models[0].id;
+                }
+                
+                // Add a message showing the total number of models
+                const countMessage = document.createElement('div');
+                countMessage.className = 'dropdown-no-results';
+                countMessage.style.borderTop = '1px solid #eee';
+                countMessage.style.marginTop = '10px';
+                countMessage.style.paddingTop = '10px';
+                countMessage.textContent = `${models.length} models available`;
+                openrouterModelList.appendChild(countMessage);
+            };
+            
+            // Function to update LMStudio model dropdown
+            const updateLMStudioModelDropdown = (models) => {
+                // Clear existing options
+                lmstudioModelList.innerHTML = '';
+                
+                if (!models || models.length === 0) {
+                    lmstudioModelList.innerHTML = '<div class="dropdown-no-results">No models available</div>';
+                    return;
+                }
+                
+                // Sort models alphabetically by name
+                models.sort((a, b) => {
+                    const nameA = a.name || a.id;
+                    const nameB = b.name || b.id;
+                    return nameA.localeCompare(nameB);
+                });
+                
+                // Add new options
+                models.forEach(model => {
+                    const option = document.createElement('div');
+                    option.className = 'dropdown-option';
+                    option.dataset.value = model.id;
+                    option.textContent = model.name || model.id;
+                    lmstudioModelList.appendChild(option);
+                    
+                    // If this is the currently selected model, update the display
+                    if (model.id === lmstudioModelSelect.value) {
+                        lmstudioSelectedModel.textContent = model.name || model.id;
+                    }
+                });
+                
+                // If no model is selected yet, select the first one
+                if (!lmstudioModelSelect.value && models.length > 0) {
+                    lmstudioModelSelect.value = models[0].id;
+                    lmstudioSelectedModel.textContent = models[0].name || models[0].id;
+                }
+                
+                // Add a message showing the total number of models
+                const countMessage = document.createElement('div');
+                countMessage.className = 'dropdown-no-results';
+                countMessage.style.borderTop = '1px solid #eee';
+                countMessage.style.marginTop = '10px';
+                countMessage.style.paddingTop = '10px';
+                countMessage.textContent = `${models.length} models available`;
+                lmstudioModelList.appendChild(countMessage);
+            };
+            
+            // Dropdown functionality for OpenRouter model
+            openrouterSelectedModel.addEventListener('click', () => {
+                const isVisible = openrouterModelOptions.style.display === 'block';
+                openrouterModelOptions.style.display = isVisible ? 'none' : 'block';
+                if (!isVisible) {
+                    openrouterModelSearch.focus();
+                }
             });
             
-            // Server toggle functionality
-            serverToggle.addEventListener('change', async () => {
-                const isEnabled = serverToggle.checked;
+            document.addEventListener('click', (event) => {
+                if (!event.target.closest('#openrouter-model-dropdown')) {
+                    openrouterModelOptions.style.display = 'none';
+                }
+            });
+            
+            // Search functionality for OpenRouter models
+            openrouterModelSearch.addEventListener('input', () => {
+                const searchText = openrouterModelSearch.value.toLowerCase();
+                const options = openrouterModelList.querySelectorAll('.dropdown-option');
                 
-                try {
-                    const response = await fetch('/api/server/toggle', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ enabled: isEnabled })
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        serverStatus.textContent = isEnabled 
-                            ? 'Server is running (Toggle to disable)' 
-                            : 'Server is disabled (Toggle to enable)';
+                let visibleCount = 0;
+                
+                options.forEach(option => {
+                    const text = option.textContent.toLowerCase();
+                    if (text.includes(searchText)) {
+                        option.style.display = 'block';
+                        visibleCount++;
                     } else {
-                        alert('Failed to toggle server: ' + data.message);
-                        // Revert the toggle if the operation failed
-                        serverToggle.checked = !isEnabled;
+                        option.style.display = 'none';
                     }
-                } catch (error) {
-                    console.error('Error toggling server:', error);
-                    alert('Error communicating with the server');
-                    // Revert the toggle if there was an error
-                    serverToggle.checked = !isEnabled;
+                });
+                
+                // Show/hide no results message
+                const noResults = openrouterModelList.querySelector('.dropdown-no-results:not([style])');
+                if (noResults) noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+            });
+            
+            openrouterModelList.addEventListener('click', (event) => {
+                const option = event.target.closest('.dropdown-option');
+                if (option) {
+                    openrouterModelSelect.value = option.dataset.value;
+                    openrouterSelectedModel.textContent = option.textContent;
+                    openrouterModelOptions.style.display = 'none';
+                }
+            });
+            
+            // Dropdown functionality for LMStudio model
+            lmstudioSelectedModel.addEventListener('click', () => {
+                const isVisible = lmstudioModelOptions.style.display === 'block';
+                lmstudioModelOptions.style.display = isVisible ? 'none' : 'block';
+                if (!isVisible) {
+                    lmstudioModelSearch.focus();
+                }
+            });
+            
+            document.addEventListener('click', (event) => {
+                if (!event.target.closest('#lmstudio-model-dropdown')) {
+                    lmstudioModelOptions.style.display = 'none';
+                }
+            });
+            
+            // Search functionality for LMStudio models
+            lmstudioModelSearch.addEventListener('input', () => {
+                const searchText = lmstudioModelSearch.value.toLowerCase();
+                const options = lmstudioModelList.querySelectorAll('.dropdown-option');
+                
+                let visibleCount = 0;
+                
+                options.forEach(option => {
+                    const text = option.textContent.toLowerCase();
+                    if (text.includes(searchText)) {
+                        option.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        option.style.display = 'none';
+                    }
+                });
+                
+                // Show/hide no results message
+                const noResults = lmstudioModelList.querySelector('.dropdown-no-results:not([style])');
+                if (noResults) noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+            });
+            
+            lmstudioModelList.addEventListener('click', (event) => {
+                const option = event.target.closest('.dropdown-option');
+                if (option) {
+                    lmstudioModelSelect.value = option.dataset.value;
+                    lmstudioSelectedModel.textContent = option.textContent;
+                    lmstudioModelOptions.style.display = 'none';
+                }
+            });
+            
+            // Dropdown functionality for test model
+            testSelectedModel.addEventListener('click', () => {
+                const isVisible = testModelOptions.style.display === 'block';
+                testModelOptions.style.display = isVisible ? 'none' : 'block';
+            });
+            
+            document.addEventListener('click', (event) => {
+                if (!event.target.closest('#test-model-dropdown')) {
+                    testModelOptions.style.display = 'none';
+                }
+            });
+            
+            testModelOptions.addEventListener('click', (event) => {
+                const option = event.target.closest('.dropdown-option');
+                if (option) {
+                    testModelSelect.value = option.dataset.value;
+                    testSelectedModel.textContent = option.textContent;
+                    testModelOptions.style.display = 'none';
                 }
             });
             
             // Test button functionality
             testButton.addEventListener('click', async () => {
-                if (!serverToggle.checked) {
-                    outputContainer.textContent = 'Server is disabled. Enable it first to test.';
+                const selectedType = testModelSelect.value;
+                
+                // Validate configuration based on selected model type
+                if (selectedType === 'openrouter') {
+                    if (!config.openrouter?.apiKey) {
+                        outputContainer.textContent = 'OpenRouter API key is required. Please enter your API key and save the configuration.';
+                        return;
+                    }
+                }
+                
+                if (selectedType === 'lmstudio' && !config.lmstudio?.url) {
+                    outputContainer.textContent = 'LM Studio URL is required. Please enter the URL and save the configuration.';
                     return;
                 }
                 
-                outputContainer.textContent = '';
-                loadingIndicator.style.display = 'block';
+                outputContainer.textContent = 'Testing...';
                 
                 try {
+                    // Prepare the model name based on the selected type
+                    let modelName;
+                    switch (selectedType) {
+                        case 'openrouter':
+                            modelName = 'openrouter:latest';
+                            break;
+                        case 'lmstudio':
+                            modelName = 'lmstudio:latest';
+                            break;
+                    }
+                    
                     const response = await fetch('/api/chat', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            model: 'file-content:latest',
+                            model: modelName,
                             messages: [
                                 {
                                     role: 'user',
                                     content: 'Test message'
                                 }
-                            ]
+                            ],
+                            stream: false
                         })
                     });
                     
@@ -343,26 +909,117 @@
                 } catch (error) {
                     console.error('Error testing server:', error);
                     outputContainer.textContent = 'Error communicating with the server: ' + error.message;
-                } finally {
-                    loadingIndicator.style.display = 'none';
                 }
             });
             
-            // Check server status on page load
-            fetch('/api/server/status')
-                .then(response => response.json())
-                .then(data => {
-                    serverToggle.checked = data.enabled;
-                    serverStatus.textContent = data.enabled 
-                        ? 'Server is running (Toggle to disable)' 
-                        : 'Server is disabled (Toggle to enable)';
+            // Fetch OpenRouter models
+            openrouterRefreshButton.addEventListener('click', async () => {
+                const apiKey = openrouterKey.value || config.openrouter?.apiKey;
+                
+                if (!apiKey) {
+                    alert('Please enter an OpenRouter API key first');
+                    return;
+                }
+                
+                try {
+                    openrouterRefreshButton.textContent = 'Loading...';
+                    openrouterRefreshButton.disabled = true;
                     
-                    // Load content after checking server status
-                    loadContent();
-                })
-                .catch(error => {
-                    console.error('Error checking server status:', error);
-                });
+                    const response = await fetch('/api/openrouter/models');
+                    const data = await response.json();
+                    
+                    if (data.success && data.models) {
+                        // Clear existing options
+                        openrouterModelOptions.innerHTML = '';
+                        
+                        // Sort models alphabetically by name
+                        data.models.sort((a, b) => {
+                            const nameA = a.name || a.id;
+                            const nameB = b.name || b.id;
+                            return nameA.localeCompare(nameB);
+                        });
+                        
+                        // Add new options
+                        data.models.forEach(model => {
+                            const option = document.createElement('div');
+                            option.className = 'dropdown-option';
+                            option.dataset.value = model.id;
+                            option.textContent = model.name || model.id;
+                            openrouterModelOptions.appendChild(option);
+                        });
+                        
+                        alert(`Models refreshed successfully. ${data.models.length} models available.`);
+                    } else {
+                        throw new Error(data.message || 'Failed to fetch models');
+                    }
+                } catch (error) {
+                    console.error('Error fetching OpenRouter models:', error);
+                    alert('Error fetching models: ' + error.message);
+                } finally {
+                    openrouterRefreshButton.textContent = 'Refresh list';
+                    openrouterRefreshButton.disabled = false;
+                }
+            });
+            
+            // Fetch LMStudio models
+            lmstudioRefreshButton.addEventListener('click', async () => {
+                const url = lmstudioUrl.value || config.lmstudio?.url;
+                
+                if (!url) {
+                    alert('Please enter a valid LM Studio URL first');
+                    return;
+                }
+                
+                try {
+                    lmstudioRefreshButton.textContent = 'Loading...';
+                    lmstudioRefreshButton.disabled = true;
+                    
+                    // Update the config with the current URL value for the API call
+                    config.lmstudio.url = url;
+                    
+                    const response = await fetch('/api/lmstudio/models');
+                    const data = await response.json();
+                    
+                    if (data.success && data.models) {
+                        // Clear existing options
+                        lmstudioModelOptions.innerHTML = '';
+                        
+                        // Sort models alphabetically by name
+                        data.models.sort((a, b) => {
+                            const nameA = a.name || a.id;
+                            const nameB = b.name || b.id;
+                            return nameA.localeCompare(nameB);
+                        });
+                        
+                        // Add new options
+                        data.models.forEach(model => {
+                            const option = document.createElement('div');
+                            option.className = 'dropdown-option';
+                            option.dataset.value = model.id;
+                            option.textContent = model.name || model.id;
+                            lmstudioModelOptions.appendChild(option);
+                        });
+                        
+                        alert(`Models refreshed successfully. ${data.models.length} models available.`);
+                    } else {
+                        throw new Error(data.message || 'Failed to fetch models');
+                    }
+                } catch (error) {
+                    console.error('Error fetching LMStudio models:', error);
+                    alert('Error fetching models: ' + error.message);
+                } finally {
+                    lmstudioRefreshButton.textContent = 'Refresh list';
+                    lmstudioRefreshButton.disabled = false;
+                }
+            });
+            
+            // Advanced options button (placeholder)
+            lmstudioAdvancedButton.addEventListener('click', () => {
+                alert('Advanced options would be shown here');
+            });
+            
+            // Load configuration on page load
+            loadConfig();
         });
     </script>
 </body>
