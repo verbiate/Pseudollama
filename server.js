@@ -699,7 +699,8 @@ const processChatRequest = async (req, res, isOpenAIFormat = false) => {
         
         // First check for specific model identifier in the request
         // This ensures we respect the actual model requested, not just the config
-        if (modelName === 'openrouter' || model === 'openrouter:latest' || config.selectedModelType === 'openrouter') {
+        if (modelName === 'openrouter' || model === 'openrouter:latest' ||
+            model.includes('openrouter') || config.selectedModelType === 'openrouter') {
             // Validate OpenRouter API key
             if (!config.openrouter?.apiKey) {
                 throw new Error('OpenRouter API key is not configured. Please set it in the web UI.');
@@ -842,10 +843,12 @@ const processChatRequest = async (req, res, isOpenAIFormat = false) => {
         console.log(`[LMSTUDIO CHECK] Checking if request is for LMStudio: model=${model}, modelName=${modelName}, selectedModelType=${config.selectedModelType}`);
         console.log(`[LMSTUDIO CHECK] Condition values: (model === 'lmstudio:latest')=${model === 'lmstudio:latest'}, (modelName === 'lmstudio')=${modelName === 'lmstudio'}, (config.selectedModelType === 'lmstudio')=${config.selectedModelType === 'lmstudio'}`);
         
-        if (model === 'lmstudio:latest' || modelName === 'lmstudio' ||
+        // Modified condition to make sure OpenRouter requests don't get processed by LMStudio handler
+        if ((model === 'lmstudio:latest' || modelName === 'lmstudio') ||
             (config.selectedModelType === 'lmstudio' &&
              modelName !== 'openrouter' &&
-             model !== 'openrouter:latest')) {
+             model !== 'openrouter:latest' &&
+             !model.includes('openrouter'))) {
             console.log('[LMSTUDIO CHECK] LMStudio condition triggered - attempting to connect to LMStudio');
             // Validate LMStudio URL
             if (!config.lmstudio?.url) {
