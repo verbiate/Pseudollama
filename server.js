@@ -26,6 +26,20 @@ let serverEnabled = true;
 const contentFilePath = path.join(__dirname, 'data', 'content.txt');
 const configFilePath = path.join(__dirname, 'data', 'config.json');
 
+// Model caching
+const modelCache = {
+    openrouter: {
+        models: null,
+        lastFetched: null,
+        cacheDuration: 3600000 // 1 hour in milliseconds
+    },
+    lmstudio: {
+        models: null,
+        lastFetched: null,
+        cacheDuration: 3600000 // 1 hour in milliseconds
+    }
+};
+
 // Default configuration
 let config = {
   selectedModelType: 'lmstudio', // Default model type: openrouter or lmstudio
@@ -268,6 +282,19 @@ app.get('/api/openrouter/models', async (req, res) => {
     }
     
     try {
+        // Check if we have a valid cache
+        const now = Date.now();
+        const cache = modelCache.openrouter;
+        
+        if (cache.models && cache.lastFetched && (now - cache.lastFetched < cache.cacheDuration)) {
+            console.log(`[OPENROUTER MODELS] Using cached models (${cache.models.length} models, cached ${Math.round((now - cache.lastFetched) / 1000 / 60)} minutes ago)`);
+            return res.json({
+                success: true,
+                models: cache.models,
+                cached: true
+            });
+        }
+        
         // Fetch models from OpenRouter API using curl command
         console.log('Fetching OpenRouter models using curl command');
         
@@ -305,14 +332,33 @@ app.get('/api/openrouter/models', async (req, res) => {
             pricing: model.pricing || {}
         }));
         
+        // Update the cache
+        modelCache.openrouter.models = models;
+        modelCache.openrouter.lastFetched = now;
+        
+        // Log the number of models instead of the full response
+        console.log(`[OPENROUTER MODELS] Fetched ${models.length} models from OpenRouter`);
+        
         res.json({
             success: true,
-            models: models
+            models: models,
+            cached: false
         });
     } catch (error) {
         console.error('Error fetching OpenRouter models:', error.message);
         if (error.response) {
             console.error('OpenRouter API error:', error.response.data);
+        }
+        
+        // If we have a cache, use it even if it's expired
+        if (modelCache.openrouter.models) {
+            console.log(`[OPENROUTER MODELS] Error fetching models, using cached models (${modelCache.openrouter.models.length} models)`);
+            return res.json({
+                success: true,
+                models: modelCache.openrouter.models,
+                cached: true,
+                error: `Error fetching fresh models: ${error.message}`
+            });
         }
         
         res.status(500).json({
@@ -342,6 +388,19 @@ app.get('/api/lmstudio/models', async (req, res) => {
     }
     
     try {
+        // Check if we have a valid cache
+        const now = Date.now();
+        const cache = modelCache.lmstudio;
+        
+        if (cache.models && cache.lastFetched && (now - cache.lastFetched < cache.cacheDuration)) {
+            console.log(`[LMSTUDIO MODELS] Using cached models (${cache.models.length} models, cached ${Math.round((now - cache.lastFetched) / 1000 / 60)} minutes ago)`);
+            return res.json({
+                success: true,
+                models: cache.models,
+                cached: true
+            });
+        }
+        
         // Prepare headers for the request
         const headers = {};
         if (config.lmstudio.apiKey) {
@@ -367,14 +426,33 @@ app.get('/api/lmstudio/models', async (req, res) => {
             created: model.created
         }));
         
+        // Update the cache
+        modelCache.lmstudio.models = models;
+        modelCache.lmstudio.lastFetched = now;
+        
+        // Log the number of models instead of the full response
+        console.log(`[LMSTUDIO MODELS] Fetched ${models.length} models from LMStudio`);
+        
         res.json({
             success: true,
-            models: models
+            models: models,
+            cached: false
         });
     } catch (error) {
         console.error('Error fetching LMStudio models:', error.message);
         if (error.response) {
             console.error('LMStudio API error:', error.response.data);
+        }
+        
+        // If we have a cache, use it even if it's expired
+        if (modelCache.lmstudio.models) {
+            console.log(`[LMSTUDIO MODELS] Error fetching models, using cached models (${modelCache.lmstudio.models.length} models)`);
+            return res.json({
+                success: true,
+                models: modelCache.lmstudio.models,
+                cached: true,
+                error: `Error fetching fresh models: ${error.message}`
+            });
         }
         
         // Determine appropriate error message
@@ -1640,7 +1718,15 @@ app.get('/v1/models', (req, res) => {
             owned_by: "pseudollama"
         });
         
-        // Remote Pseudo Model removed as requested
+        // If we have a specific OpenRouter model configured, add it too
+        if (config.openrouter?.model) {
+            openaiModelsList.push({
+                id: config.openrouter.model,
+                object: "model",
+                created: Math.floor(Date.now() / 1000),
+                owned_by: "openrouter"
+            });
+        }
     }
     
     // Add LMStudio model if configured
@@ -1651,6 +1737,16 @@ app.get('/v1/models', (req, res) => {
             created: Math.floor(Date.now() / 1000),
             owned_by: "pseudollama"
         });
+        
+        // If we have a specific LMStudio model configured, add it too
+        if (config.lmstudio?.model) {
+            openaiModelsList.push({
+                id: config.lmstudio.model,
+                object: "model",
+                created: Math.floor(Date.now() / 1000),
+                owned_by: "lmstudio"
+            });
+        }
     }
     
     const openaiModels = {
@@ -1658,7 +1754,8 @@ app.get('/v1/models', (req, res) => {
         data: openaiModelsList
     };
 
-    console.log('Sending OpenAI-style /v1/models response:', JSON.stringify(openaiModels, null, 2));
+    // Log a more concise message instead of the full response
+    console.log(`Sending OpenAI-style /v1/models response with ${openaiModelsList.length} models`);
     res.json(openaiModels);
 });
 
