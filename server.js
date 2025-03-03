@@ -3,14 +3,14 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const app = express();
-const PORT = 11434; // Same port as Ollama
+const PORT = 11435; // Same port as Ollama, plus one
 
 // Server state
 let serverEnabled = true;
 const contentFilePath = path.join(__dirname, 'data', 'content.txt');
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: '50mb' })); // Increase JSON body size limit
 app.use(cors());
 app.use(express.static('public')); // For serving the web UI
 
@@ -145,6 +145,27 @@ app.post('/api/chat', (req, res) => {
         console.log('Sending /api/chat error response:', JSON.stringify(ollamaErrorResponse, null, 2));
         res.status(200).json(ollamaErrorResponse); // Ollama returns 200 even for errors
     }
+});
+
+// Endpoint to handle model pulling requests (similar to Ollama's /api/pull)
+app.post('/api/pull', (req, res) => {
+    console.log('Received /api/pull request:', JSON.stringify(req.body, null, 2));
+    
+    // Check if server is enabled
+    if (!serverEnabled) {
+        return res.status(503).json({
+            error: 'Server is currently disabled'
+        });
+    }
+    
+    // Simply respond as if the model is already pulled and ready
+    // This makes external tools happy without actually pulling anything
+    res.json({
+        status: 'success',
+        digest: 'sha256:pseudo',
+        total_size: 0,
+        completed_size: 0
+    });
 });
 
 // Endpoint to list available models (similar to Ollama's /api/tags)
